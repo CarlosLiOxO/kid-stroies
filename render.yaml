@@ -1,0 +1,48 @@
+# ==========================================
+# 童话故事平台 - Render 部署配置
+# ==========================================
+
+services:
+  # ─── 后端 API 服务 ───
+  - type: web
+    name: kid-story-api
+    rootDir: server
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      # Render 会自动注入 PORT，无需手动设置
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true        # Render 自动生成随机密钥
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kid-story-db       # 关联下方的 PostgreSQL 数据库
+          property: connectionString
+      - key: GLM_API_KEY
+        sync: false                # 需要手动在 Render Dashboard 填写
+      - key: GLM_API_BASE
+        value: https://open.bigmodel.cn/api/paas/v4
+      - key: GLM_MODEL
+        value: glm-4.7
+
+  # ─── 前端静态站点 ───
+  - type: static
+    name: kid-story-web
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html   # SPA fallback
+    envVars:
+      # 构建时注入后端地址（部署后需手动改为实际 Render 后端 URL）
+      - key: VITE_API_BASE
+        value: https://kid-story-api.onrender.com/api
+
+# ─── PostgreSQL 数据库 ───
+databases:
+  - name: kid-story-db
+    plan: free                     # Render 免费层 512MB，够 MVP 使用

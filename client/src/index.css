@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/*
+ * 童话故事平台 - 全局样式
+ * 使用 TailwindCSS v4
+ */
+
+/* 基础层自定义样式 */
+@layer base {
+  html {
+    font-family: "Nunito", "PingFang SC", "Microsoft YaHei", sans-serif;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-amber-50 text-gray-800 antialiased;
+    min-height: 100vh;
+    overscroll-behavior-y: none;
+  }
+
+  /* 自定义滚动条 - 移动端隐藏 */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #f59e0b;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-track {
+    background-color: #fef3c7;
+  }
+
+  @media (max-width: 767px) {
+    ::-webkit-scrollbar {
+      width: 2px;
+    }
+  }
+}
+
+/* 组件层自定义样式 */
+@layer components {
+  /* 童话风格卡片 */
+  .story-card {
+    @apply bg-white rounded-2xl shadow-md border border-amber-200 
+           hover:shadow-lg hover:border-amber-400 transition-all duration-300;
+  }
+
+  /* 主按钮 */
+  .btn-primary {
+    @apply bg-amber-500 hover:bg-amber-600 text-white font-semibold 
+           py-2.5 sm:py-2 px-5 sm:px-6 rounded-full shadow-md hover:shadow-lg 
+           transition-all duration-200 active:scale-95 text-sm sm:text-base;
+  }
+
+  /* 次按钮 */
+  .btn-secondary {
+    @apply bg-purple-500 hover:bg-purple-600 text-white font-semibold 
+           py-2.5 sm:py-2 px-5 sm:px-6 rounded-full shadow-md hover:shadow-lg 
+           transition-all duration-200 active:scale-95 text-sm sm:text-base;
+  }
+
+  /* 轮廓按钮 */
+  .btn-outline {
+    @apply border-2 border-amber-400 text-amber-600 font-semibold 
+           py-2.5 sm:py-2 px-5 sm:px-6 rounded-full hover:bg-amber-50 
+           transition-all duration-200 active:scale-95 text-sm sm:text-base;
+  }
+
+  /* 输入框 */
+  .input-field {
+    @apply w-full px-3.5 sm:px-4 py-2.5 sm:py-3 border-2 border-amber-200 rounded-xl 
+           focus:border-amber-400 focus:outline-none focus:ring-2 
+           focus:ring-amber-200 transition-all duration-200 bg-white text-sm sm:text-base;
+  }
+
+  /* 页面标题 - 移动端缩小 */
+  .page-title {
+    @apply text-2xl sm:text-3xl font-bold text-amber-800 mb-4 sm:mb-6;
+  }
+
+  /* 页面容器 */
+  .page-container {
+    @apply max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6;
+  }
+}

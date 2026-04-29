@@ -1,0 +1,80 @@
+// 儿童绘本平台 - Prisma Schema
+// 数据源配置在 prisma.config.ts 中
+// 开发环境使用 SQLite，生产环境（Render）使用 PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// 用户模型 - 存储平台用户信息
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  name         String
+  avatar       String?
+  tokens       Int           @default(100)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  children     Child[]
+  stories      Story[]
+  tokenRecords TokenRecord[]
+}
+
+// 儿童信息模型 - 关联到用户账号
+model Child {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  age         Int?
+  gender      String?
+  personality String?
+  concerns    String?
+  tags        String? // JSON 字符串存储标签列表
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+  stories     Story[]
+}
+
+// 绘本故事模型 - 核心内容模型
+model Story {
+  id              String    @id @default(uuid())
+  userId          String
+  childId         String?
+  title           String
+  content         String // JSON 字符串存储故事页面内容
+  summary         String?
+  style           String    @default("classic")
+  artStyle        String    @default("watercolor")
+  images          String? // JSON 字符串存储图片 URL 列表
+  tags            String? // JSON 字符串存储标签列表
+  ageRange        String? // 适龄范围，如 "3-6"
+  theme           String?
+  educationalGoal String?
+  isPublic        Boolean   @default(false)
+  isPushed        Boolean   @default(false)
+  pushedAt        DateTime?
+  downloadCount   Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  user            User      @relation(fields: [userId], references: [id])
+  child           Child?    @relation(fields: [childId], references: [id])
+}
+
+// Token 记录模型 - 追踪 Token 消费与获取
+model TokenRecord {
+  id          String   @id @default(uuid())
+  userId      String
+  amount      Int
+  type        String // "earn" | "spend" | "bonus"
+  description String
+  relatedId   String? // 关联的故事 ID 或购买 ID
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
