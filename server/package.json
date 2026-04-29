@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "prisma generate && tsx watch src/index.ts",
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && tsc && node scripts/copyPrismaClient.js",
     "start": "prisma migrate deploy && node dist/index.js",
     "test": "vitest run",
     "db:generate": "prisma generate",
