@@ -11,6 +11,8 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm run start
     envVars:
+      - key: NODE_VERSION
+        value: 22.13.0
       # Render 会自动注入 PORT，无需手动设置
       - key: NODE_ENV
         value: production
@@ -39,6 +41,8 @@ services:
         source: /*
         destination: /index.html   # SPA fallback
     envVars:
+      - key: NODE_VERSION
+        value: 22.13.0
       # 构建时注入后端地址（部署后需手动改为实际 Render 后端 URL）
       - key: VITE_API_BASE
         value: https://kid-story-api.onrender.com/api
