@@ -8,7 +8,7 @@ import axios from 'axios'
 /** 创建 axios 实例，配置基础 URL - 生产环境走环境变量，本地开发走 Vite 代理 */
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE || '/api',
-  timeout: 15000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },

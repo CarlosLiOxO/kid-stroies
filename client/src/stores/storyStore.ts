@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import axios from 'axios'
 import type { CreateStoryRequest, Story, UpdateStoryRequest } from '../types'
 import storyService from '../services/storyService'
 
@@ -43,7 +44,7 @@ export const useStoryStore = create<StoryState>((set) => ({
       const stories = await storyService.getStories(params)
       set({ stories, isLoading: false })
     } catch (err) {
-      const message = err instanceof Error ? err.message : '获取故事列表失败'
+      const message = getReadableErrorMessage(err, '获取故事列表失败')
       set({ error: message, isLoading: false })
     }
   },
@@ -61,7 +62,7 @@ export const useStoryStore = create<StoryState>((set) => ({
       }))
       return newStory
     } catch (err) {
-      const message = err instanceof Error ? err.message : '创建故事失败'
+      const message = getReadableErrorMessage(err, '创建故事失败')
       set({ error: message, isLoading: false })
       throw err
     }
@@ -80,7 +81,7 @@ export const useStoryStore = create<StoryState>((set) => ({
       }))
       return updated
     } catch (err) {
-      const message = err instanceof Error ? err.message : '更新故事失败'
+      const message = getReadableErrorMessage(err, '更新故事失败')
       set({ error: message, isLoading: false })
       throw err
     }
@@ -98,7 +99,7 @@ export const useStoryStore = create<StoryState>((set) => ({
         isLoading: false,
       }))
     } catch (err) {
-      const message = err instanceof Error ? err.message : '删除故事失败'
+      const message = getReadableErrorMessage(err, '删除故事失败')
       set({ error: message, isLoading: false })
       throw err
     }
@@ -117,7 +118,7 @@ export const useStoryStore = create<StoryState>((set) => ({
       }))
       return updated
     } catch (err) {
-      const message = err instanceof Error ? err.message : '推送故事失败'
+      const message = getReadableErrorMessage(err, '推送故事失败')
       set({ error: message, isLoading: false })
       throw err
     }
@@ -126,3 +127,21 @@ export const useStoryStore = create<StoryState>((set) => ({
   /** 清除错误信息 */
   clearError: () => set({ error: null }),
 }))
+
+/**
+ * 提取更适合展示给用户的错误文案
+ */
+function getReadableErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const responseMessage = error.response?.data?.message
+    if (typeof responseMessage === 'string' && responseMessage.trim()) {
+      return responseMessage
+    }
+
+    if (error.code === 'ECONNABORTED') {
+      return 'AI 正在生成较长故事，可能遇到冷启动或生成时间较长，请稍后重试。'
+    }
+  }
+
+  return error instanceof Error ? error.message : fallback
+}

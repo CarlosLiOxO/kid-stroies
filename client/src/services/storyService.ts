@@ -31,7 +31,9 @@ const storyService = {
    * @returns 创建的故事
    */
   async createStory(data: CreateStoryRequest): Promise<Story> {
-    const response = await api.post<ApiResponse<Story>>('/stories', data)
+    const response = await api.post<ApiResponse<Story>>('/stories', data, {
+      timeout: 90000,
+    })
     return response.data.data
   },
 
