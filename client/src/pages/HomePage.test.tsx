@@ -15,4 +15,16 @@ describe('HomePage', () => {
     expect(screen.getByText('故事库')).toBeInTheDocument()
     expect(screen.getByText('社区分享')).toBeInTheDocument()
   })
+
+  it('首页快捷入口跳转到对应页面', () => {
+    render(
+      <BrowserRouter>
+        <HomePage />
+      </BrowserRouter>
+    )
+
+    expect(screen.getByRole('link', { name: /创建故事/ })).toHaveAttribute('href', '/create-story')
+    expect(screen.getByRole('link', { name: /故事库/ })).toHaveAttribute('href', '/stories')
+    expect(screen.getByRole('link', { name: /社区分享/ })).toHaveAttribute('href', '/community')
+  })
 })
