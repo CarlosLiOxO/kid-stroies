@@ -10,7 +10,8 @@ describe('HomePage', () => {
       </BrowserRouter>
     )
 
-    expect(screen.getByText('欢迎来到童话故事平台')).toBeInTheDocument()
+    expect(screen.getByText('把今天的小情绪，编成今晚的睡前童话')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '开始编故事' })).toHaveAttribute('href', '/create-story')
     expect(screen.getByText('创建故事')).toBeInTheDocument()
     expect(screen.getByText('故事库')).toBeInTheDocument()
     expect(screen.getByText('社区分享')).toBeInTheDocument()
@@ -23,8 +24,8 @@ describe('HomePage', () => {
       </BrowserRouter>
     )
 
-    expect(screen.getByRole('link', { name: /创建故事/ })).toHaveAttribute('href', '/create-story')
-    expect(screen.getByRole('link', { name: /故事库/ })).toHaveAttribute('href', '/stories')
-    expect(screen.getByRole('link', { name: /社区分享/ })).toHaveAttribute('href', '/community')
+    expect(screen.getByRole('link', { name: /^浏览故事库$/ })).toHaveAttribute('href', '/stories')
+    expect(screen.getByText('创建故事').closest('a')).toHaveAttribute('href', '/create-story')
+    expect(screen.getByText('社区分享').closest('a')).toHaveAttribute('href', '/community')
   })
 })

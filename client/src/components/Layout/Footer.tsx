@@ -1,59 +1,69 @@
 import { Link } from 'react-router-dom'
 
+interface FooterProps {
+  isAuthRoute?: boolean
+}
+
 /**
  * 页脚组件
- * 显示版权信息、快速链接等
+ * 展示品牌说明与家长端常用入口
  */
-const Footer = () => {
+const Footer = ({ isAuthRoute = false }: FooterProps) => {
+  if (isAuthRoute) {
+    return (
+      <footer className="fairy-footer mt-auto">
+        <div className="mx-auto max-w-4xl px-4 py-6 text-center">
+          <p className="fairy-auth-footer">让陪伴变成每晚的故事仪式，从这一次轻轻开始。</p>
+        </div>
+      </footer>
+    )
+  }
+
   return (
-    <footer className="bg-white border-t border-amber-200 mt-auto">
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {/* 品牌信息 */}
+    <footer className="fairy-footer mt-auto">
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">📚</span>
-              <span className="text-lg font-bold text-amber-700">童话故事</span>
+            <Link className="mb-3 flex items-center gap-3" to="/">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#fff1dc] text-lg shadow-sm">
+                书
+              </span>
+              <span>
+                <span className="block text-lg font-bold text-[#6d4c41]">小主人童话</span>
+                <span className="block text-xs text-[#a08c82]">让陪伴变成每晚的故事仪式</span>
+              </span>
             </Link>
-            <p className="text-sm text-gray-500">
-              用 AI 为每个孩子创造独一无二的童话故事
-            </p>
+            <p className="text-sm leading-6 text-[#7f6e63]">用 AI 为每个孩子编织独一无二的睡前故事与温柔插画。</p>
           </div>
 
-          {/* 快速链接 */}
           <div>
-            <h4 className="font-semibold text-purple-700 mb-3">快速链接</h4>
+            <h4 className="mb-3 font-semibold text-[#7b57c8]">快速链接</h4>
             <ul className="space-y-2">
-              <li><Link to="/create-story" className="text-sm text-gray-600 hover:text-amber-600">创建故事</Link></li>
-              <li><Link to="/stories" className="text-sm text-gray-600 hover:text-amber-600">故事库</Link></li>
-              <li><Link to="/community" className="text-sm text-gray-600 hover:text-amber-600">社区</Link></li>
+              <li><Link className="text-sm text-[#7f6e63] transition-colors hover:text-[#b7773a]" to="/create-story">创建故事</Link></li>
+              <li><Link className="text-sm text-[#7f6e63] transition-colors hover:text-[#b7773a]" to="/stories">故事库</Link></li>
+              <li><Link className="text-sm text-[#7f6e63] transition-colors hover:text-[#b7773a]" to="/community">社区</Link></li>
             </ul>
           </div>
 
-          {/* 家长工具 */}
           <div>
-            <h4 className="font-semibold text-purple-700 mb-3">家长工具</h4>
+            <h4 className="mb-3 font-semibold text-[#7b57c8]">家长工具</h4>
             <ul className="space-y-2">
-              <li><Link to="/dashboard" className="text-sm text-gray-600 hover:text-amber-600">仪表盘</Link></li>
-              <li><Link to="/children" className="text-sm text-gray-600 hover:text-amber-600">孩子管理</Link></li>
-              <li><Link to="/profile" className="text-sm text-gray-600 hover:text-amber-600">个人中心</Link></li>
+              <li><Link className="text-sm text-[#7f6e63] transition-colors hover:text-[#b7773a]" to="/dashboard">仪表盘</Link></li>
+              <li><Link className="text-sm text-[#7f6e63] transition-colors hover:text-[#b7773a]" to="/children">孩子管理</Link></li>
+              <li><Link className="text-sm text-[#7f6e63] transition-colors hover:text-[#b7773a]" to="/profile">个人中心</Link></li>
             </ul>
           </div>
 
-          {/* 儿童入口 */}
           <div>
-            <h4 className="font-semibold text-purple-700 mb-3">儿童入口</h4>
+            <h4 className="mb-3 font-semibold text-[#7b57c8]">儿童入口</h4>
             <ul className="space-y-2">
-              <li><Link to="/kids" className="text-sm text-gray-600 hover:text-amber-600">儿童端</Link></li>
+              <li><Link className="text-sm text-[#7f6e63] transition-colors hover:text-[#b7773a]" to="/kids">儿童端</Link></li>
             </ul>
           </div>
         </div>
 
-        {/* 版权信息 */}
-        <div className="border-t border-amber-100 mt-6 pt-4 text-center">
-          <p className="text-sm text-gray-400">
-            &copy; 2026 童话故事平台. All rights reserved.
-          </p>
+        <div className="mt-6 border-t border-white/80 pt-4 text-center">
+          <p className="text-sm text-[#ab998e]">&copy; 2026 小主人童话. All rights reserved.</p>
         </div>
       </div>
     </footer>

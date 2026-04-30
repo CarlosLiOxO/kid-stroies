@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import type { FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 
@@ -20,7 +19,7 @@ const LoginPage = () => {
    * 处理登录表单提交
    * 调用登录 API，成功后跳转到 dashboard 页面
    */
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     // 清除上次的错误信息
     clearError()
@@ -35,63 +34,74 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="page-container flex items-center justify-center min-h-[60vh]">
-      <div className="story-card p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-amber-800 text-center mb-6">登录</h1>
-
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {/* 邮箱输入 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
-            <input
-              type="email"
-              className="input-field"
-              placeholder="请输入邮箱"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* 密码输入 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">密码</label>
-            <input
-              type="password"
-              className="input-field"
-              placeholder="请输入密码"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* 错误提示 */}
-          {error && (
-            <p className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-2">
-              {error}
+    <div className="page-container">
+      <section className="fairy-auth-stage mx-auto max-w-xl">
+        <div className="fairy-auth-card w-full p-6 sm:p-8">
+          <div className="mb-6 space-y-3 text-center">
+            <p className="fairy-kicker">Welcome Back</p>
+            <h1 className="fairy-title text-3xl md:text-4xl">回到今晚的故事准备台</h1>
+            <p className="fairy-subtitle">
+              继续为孩子准备今晚的专属童话、插画和那些值得慢慢说出口的小情绪。
             </p>
-          )}
+          </div>
 
-          {/* 登录按钮 */}
-          <button
-            type="submit"
-            className="btn-primary w-full"
-            disabled={isLoading}
-          >
-            {isLoading ? '登录中...' : '登录'}
-          </button>
-        </form>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {/* 邮箱输入 */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[#6d4c41]" htmlFor="login-email">
+                邮箱
+              </label>
+              <input
+                type="email"
+                id="login-email"
+                className="input-field"
+                placeholder="请输入邮箱"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
 
-        <p className="text-center text-sm text-gray-500 mt-4">
-          还没有账号？
-          <Link to="/register" className="text-amber-600 hover:underline">
-            立即注册
-          </Link>
-        </p>
-      </div>
+            {/* 密码输入 */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[#6d4c41]" htmlFor="login-password">
+                密码
+              </label>
+              <input
+                type="password"
+                id="login-password"
+                className="input-field"
+                placeholder="请输入密码"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            {error ? <p className="fairy-message-error">{error}</p> : null}
+
+            <button
+              type="submit"
+              className="btn-primary w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? '登录中...' : '登录'}
+            </button>
+          </form>
+
+          <div className="mt-5 space-y-3 text-center">
+            <p className="fairy-auth-note">欢迎回来，继续把今天的陪伴变成孩子最期待的睡前故事。</p>
+            <p className="text-sm text-[#8f7d72]">
+              还没有账号？
+              <Link to="/register" className="ml-1 font-semibold text-[#b7773a] hover:underline">
+                立即注册
+              </Link>
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

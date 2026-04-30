@@ -57,6 +57,7 @@ const KidsPage = () => {
   const pages = useMemo(() => parseStoryPages(selectedStory?.content), [selectedStory?.content])
   const currentPage = pages[pageIndex]
   const images = useMemo(() => parseImages(selectedStory?.images), [selectedStory?.images])
+  const currentImage = images[pageIndex] ?? images[0]
 
   /**
    * 朗读当前页文本
@@ -109,25 +110,28 @@ const KidsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-4 py-6 lg:flex-row">
-        <aside className="w-full rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm lg:max-w-sm">
-          <h1 className="mb-4 text-center text-3xl font-bold text-neutral-800">我的故事</h1>
-          <p className="mb-5 text-center text-sm text-neutral-500">今天晚上，挑一篇喜欢的故事慢慢读吧。</p>
+    <div className="fairy-shell">
+      <div className="grid gap-6 lg:min-h-[calc(100vh-12rem)] lg:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="fairy-panel w-full p-5 lg:max-w-sm">
+          <div className="mb-5 space-y-3 text-center">
+            <span className="fairy-kicker">今晚故事剧场</span>
+            <h1 className="text-3xl font-bold text-[#6d4c41]">我的故事</h1>
+            <p className="text-sm leading-6 text-[#7d6d64]">挑一篇喜欢的故事，慢慢翻开今晚的月光书页。</p>
+          </div>
           <Link
-            className="mb-5 block rounded-full border border-neutral-300 px-4 py-2 text-center text-sm font-semibold text-neutral-700 transition hover:bg-neutral-100"
+            className="btn-outline mb-5 flex w-full justify-center"
             to="/kids/favorites"
           >
             收藏与记录（{favorites.length}）
           </Link>
-          {error ? <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div> : null}
+          {error ? <div className="fairy-message-error">{error}</div> : null}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-2">
             {stories.map((story, index) => (
               <button
-                className={`rounded-2xl border p-4 text-center transition ${
+                className={`fairy-book-card p-4 text-center ${
                   selectedStoryId === story.id
-                    ? 'border-neutral-900 bg-neutral-900 text-white'
-                    : 'border-neutral-200 bg-neutral-50 text-neutral-700 hover:border-neutral-400'
+                    ? 'border-[#d7c2ff] bg-[#2e2149] text-white shadow-[0_20px_45px_rgba(54,38,92,0.28)]'
+                    : 'bg-white/82 text-[#625470] hover:border-[#d7c2ff]'
                 }`}
                 key={story.id}
                 onClick={() => {
@@ -136,7 +140,7 @@ const KidsPage = () => {
                 }}
                 type="button"
               >
-                <div className="mb-3 flex h-20 items-center justify-center rounded-2xl bg-white/70 text-3xl">
+                <div className="fairy-book-cover mb-3 flex h-20 items-center justify-center rounded-2xl text-3xl">
                   {['🌙', '✨', '🦁', '🌈', '🚀', '🌊'][index % 6]}
                 </div>
                 <p className="text-sm font-semibold">{story.title}</p>
@@ -145,61 +149,62 @@ const KidsPage = () => {
           </div>
         </aside>
 
-        <main className="flex-1 rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-sm">
+        <main className="fairy-kids-stage flex-1">
           {!selectedStory || !currentPage ? (
-            <div className="flex h-full min-h-[420px] items-center justify-center rounded-[2rem] bg-neutral-50 text-center text-neutral-500">
+            <div className="flex h-full min-h-[420px] items-center justify-center rounded-[2rem] bg-white/10 text-center text-white/80">
               暂时还没有已推送的故事，请让家长先在故事库中完成推送。
             </div>
           ) : (
             <div className="flex h-full flex-col gap-6">
               <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h2 className="text-3xl font-bold text-neutral-800">{selectedStory.title}</h2>
-                  <p className="mt-2 text-sm text-neutral-500">
+                  <span className="fairy-sticker-badge">今晚故事剧场</span>
+                  <h2 className="mt-3 text-3xl font-bold text-white">{selectedStory.title}</h2>
+                  <p className="mt-2 text-sm text-white/70">
                     第 {pageIndex + 1} / {pages.length} 页 · {selectedStory.theme ?? '睡前故事'}
                   </p>
                 </div>
-                <button className="rounded-full bg-neutral-900 px-5 py-3 text-sm font-semibold text-white" onClick={handleSpeak} type="button">
+                <button className="btn-primary" onClick={handleSpeak} type="button">
                   朗读这一页
                 </button>
               </header>
 
               <div className="flex flex-wrap gap-3">
                 <button
-                  className="rounded-full border border-neutral-300 px-5 py-3 text-sm font-semibold text-neutral-700"
+                  className="btn-outline"
                   onClick={handleToggleFavorite}
                   type="button"
                 >
                   {favorites.includes(selectedStory.id) ? '取消收藏' : '收藏故事'}
                 </button>
                 {favorites.includes(selectedStory.id) ? (
-                  <span className="rounded-full bg-amber-100 px-4 py-3 text-sm font-medium text-amber-700">
+                  <span className="fairy-sticker-badge">
                     已加入收藏
                   </span>
                 ) : null}
               </div>
 
               <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-                <div className="overflow-hidden rounded-[2rem] bg-neutral-100">
-                  {images[pageIndex] || images[0] ? (
+                <div className="fairy-book-card overflow-hidden border-white/20 bg-white/10">
+                  {currentImage ? (
                     <img
                       alt={selectedStory.title}
                       className="h-full min-h-[320px] w-full object-cover"
-                      src={images[pageIndex] ?? images[0]}
+                      src={currentImage}
                     />
                   ) : (
                     <div className="flex h-full min-h-[320px] items-center justify-center text-7xl">📚</div>
                   )}
                 </div>
 
-                <article className="flex min-h-[320px] flex-col rounded-[2rem] border border-neutral-200 bg-neutral-50 p-6">
-                  <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-neutral-400">
+                <article className="flex min-h-[320px] flex-col rounded-[2rem] border border-white/15 bg-white/10 p-6">
+                  <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-white/50">
                     Page {currentPage.page}
                   </p>
-                  <p className="flex-1 text-lg leading-10 text-neutral-700">{currentPage.text}</p>
+                  <p className="flex-1 text-lg leading-10 text-white/92">{currentPage.text}</p>
                   <div className="mt-6 flex items-center justify-between gap-3">
                     <button
-                      className="rounded-full border border-neutral-300 px-5 py-3 text-sm font-semibold text-neutral-700 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="btn-outline disabled:cursor-not-allowed disabled:opacity-40"
                       disabled={pageIndex === 0}
                       onClick={() => handleTurnPage(Math.max(0, pageIndex - 1))}
                       type="button"
@@ -207,7 +212,7 @@ const KidsPage = () => {
                       上一页
                     </button>
                     <button
-                      className="rounded-full bg-neutral-900 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                      className="btn-primary disabled:cursor-not-allowed disabled:opacity-40"
                       disabled={pageIndex >= pages.length - 1}
                       onClick={() => handleTurnPage(Math.min(pages.length - 1, pageIndex + 1))}
                       type="button"

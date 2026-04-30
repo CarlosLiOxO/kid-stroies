@@ -47,6 +47,7 @@ const StoryDetailPage = () => {
   const images = useMemo(() => parseImages(story?.images), [story?.images])
   const currentPage = pages[pageIndex]
   const isOwnStory = story?.userId === user?.id
+  const pageImage = images[pageIndex] ?? images[0]
 
   /**
    * 朗读当前页
@@ -89,53 +90,60 @@ const StoryDetailPage = () => {
 
   if (isLoading) {
     return (
-      <div className="page-container flex min-h-[60vh] items-center justify-center">
-        <p className="text-lg text-gray-500">故事加载中...</p>
+      <div className="fairy-shell">
+        <div className="fairy-empty flex min-h-[60vh] items-center justify-center text-base">故事加载中...</div>
       </div>
     )
   }
 
   if (error || !story) {
     return (
-      <div className="page-container flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <p className="text-lg text-red-500">{error || '故事不存在'}</p>
-        <button className="btn-outline" onClick={() => navigate(-1)} type="button">返回上一页</button>
+      <div className="fairy-shell">
+        <div className="fairy-empty flex min-h-[60vh] flex-col items-center justify-center gap-4">
+          <p className="fairy-message-error max-w-xl text-center">{error || '故事不存在'}</p>
+          <button className="btn-outline" onClick={() => navigate(-1)} type="button">返回上一页</button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="page-container max-w-5xl space-y-6">
-      {/* 标题与作者信息 */}
-      <header className="story-card p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-amber-800">{story.title}</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500">
-              {story.user ? (
-                <span className="flex items-center gap-1">
-                  <span className="text-base">👤</span>
-                  {story.user.name}
-                </span>
-              ) : null}
-              {story.child ? (
-                <span>
-                  📖 为 <span className="font-medium text-purple-600">{story.child.name}</span> 创作
-                </span>
-              ) : null}
-              <span>{new Date(story.createdAt).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-              <span className="rounded-full bg-amber-100 px-3 py-0.5 text-xs font-medium text-amber-700">
-                {story.style ?? '睡前'}
-              </span>
+    <div className="fairy-shell fairy-stack max-w-6xl">
+      <header className="fairy-hero space-y-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-4">
+            <span className="fairy-kicker">绘本阅读台</span>
+            <div className="space-y-3">
+              <h1 className="fairy-title text-3xl md:text-4xl">{story.title}</h1>
+              <div className="flex flex-wrap items-center gap-3 text-sm text-[#8f7d72]">
+                <span>{new Date(story.createdAt).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                {story.user ? (
+                  <span className="flex items-center gap-1">
+                    <span>👤</span>
+                    {story.user.name}
+                  </span>
+                ) : null}
+                {story.child ? (
+                  <span>
+                    为 <span className="font-semibold text-[#7b57c8]">{story.child.name}</span> 创作
+                  </span>
+                ) : null}
+              </div>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2 text-sm">
-              {story.theme ? <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700">主题：{story.theme}</span> : null}
-              {story.educationalGoal ? <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700">目标：{story.educationalGoal}</span> : null}
-              {story.ageRange ? <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">适龄 {story.ageRange}</span> : null}
+
+            <div className="flex flex-wrap gap-2 text-sm">
+              <span className="fairy-chip-warm">{story.style ?? '睡前'}</span>
+              {story.theme ? <span className="fairy-chip-lilac">主题：{story.theme}</span> : null}
+              {story.educationalGoal ? <span className="fairy-chip-rose">目标：{story.educationalGoal}</span> : null}
+              {story.ageRange ? <span className="fairy-chip-sky">适龄 {story.ageRange}</span> : null}
             </div>
+
+            {story.summary ? (
+              <p className="fairy-surface-muted max-w-3xl text-sm leading-7 text-[#6d5d54]">{story.summary}</p>
+            ) : null}
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="fairy-action-row">
             {isOwnStory && !story.isPushed ? (
               <button className="btn-secondary text-sm" onClick={() => void handlePush()} type="button">推送到孩子端</button>
             ) : null}
@@ -150,67 +158,83 @@ const StoryDetailPage = () => {
         </div>
 
         {downloadMessage ? (
-          <p className={`mt-4 rounded-xl px-4 py-3 text-sm ${downloadMessage.includes('成功') ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+          <p className={downloadMessage.includes('成功') ? 'fairy-message-success' : 'fairy-message-error'}>
             {downloadMessage}
           </p>
         ) : null}
-
-        {story.summary ? (
-          <p className="mt-5 rounded-2xl bg-amber-50 p-5 text-sm leading-7 text-amber-800">{story.summary}</p>
-        ) : null}
       </header>
 
-      {/* 阅读区 */}
       {!currentPage ? (
-        <div className="story-card flex min-h-[420px] items-center justify-center p-8 text-gray-400">暂无故事内容</div>
+        <div className="fairy-empty flex min-h-[420px] items-center justify-center">暂无故事内容</div>
       ) : (
-        <div className="story-card overflow-hidden p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm font-semibold tracking-[0.3em] text-gray-400 uppercase">
-              第 {pageIndex + 1} / {pages.length} 页
-            </p>
-            <button className="rounded-full bg-amber-100 px-5 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-200" onClick={handleSpeak} type="button">
+        <section className="fairy-reader-stage">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-2">
+              <p className="fairy-kicker">第 {pageIndex + 1} / {pages.length} 页</p>
+              <p className="text-sm text-[#8f7d72]">翻开这一页，继续今晚的童话旅程。</p>
+            </div>
+            <button className="btn-outline" onClick={handleSpeak} type="button">
               朗读这一页
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="overflow-hidden rounded-2xl bg-amber-50">
-              {images[pageIndex] || images[0] ? (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+            <div className="fairy-book-card overflow-hidden">
+              {pageImage ? (
                 <img
                   alt={`${story.title} 第${pageIndex + 1}页`}
-                  className="h-full min-h-[220px] sm:min-h-[350px] w-full object-cover"
-                  src={images[pageIndex] ?? images[0]}
+                  className="h-full min-h-[240px] w-full object-cover sm:min-h-[360px]"
+                  src={pageImage}
                 />
               ) : (
-                <div className="flex h-full min-h-[220px] sm:min-h-[350px] items-center justify-center text-5xl sm:text-7xl">📚</div>
+                <div className="fairy-book-cover flex h-full min-h-[240px] items-center justify-center text-5xl sm:min-h-[360px] sm:text-7xl">
+                  📚
+                </div>
               )}
             </div>
-            <article className="flex flex-col rounded-2xl bg-amber-50/50 p-6">
-              <p className="text-lg leading-10 text-gray-700">{currentPage.text}</p>
+
+            <article className="fairy-surface-muted flex min-h-[240px] flex-col justify-between sm:min-h-[360px]">
+              <div>
+                <p className="mb-3 text-sm font-semibold tracking-[0.18em] text-[#b68a63] uppercase">
+                  正文书页
+                </p>
+                <p className="text-lg leading-10 text-[#5f5147]">{currentPage.text}</p>
+              </div>
+              <div className="mt-6 flex items-center justify-between gap-3 border-t border-white/80 pt-4">
+                <span className="fairy-chip-sky">当前第 {pageIndex + 1} 页</span>
+                <span className="text-sm text-[#9a887d]">共 {pages.length} 页</span>
+              </div>
             </article>
           </div>
 
           <div className="mt-6 flex items-center justify-between gap-3">
             <button
+              aria-label="上一页"
               className="btn-outline disabled:cursor-not-allowed disabled:opacity-40"
               disabled={pageIndex === 0}
-              onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
+              onClick={() => {
+                window.speechSynthesis?.cancel()
+                setPageIndex((current) => Math.max(0, current - 1))
+              }}
               type="button"
             >
               上一页
             </button>
-            <span className="text-sm text-gray-400">第 {pageIndex + 1} 页 / 共 {pages.length} 页</span>
+            <span className="fairy-chip-warm">第 {pageIndex + 1} 页 / 共 {pages.length} 页</span>
             <button
+              aria-label="下一页"
               className="btn-outline disabled:cursor-not-allowed disabled:opacity-40"
               disabled={pageIndex >= pages.length - 1}
-              onClick={() => setPageIndex((current) => Math.min(pages.length - 1, current + 1))}
+              onClick={() => {
+                window.speechSynthesis?.cancel()
+                setPageIndex((current) => Math.min(pages.length - 1, current + 1))
+              }}
               type="button"
             >
               下一页
             </button>
           </div>
-        </div>
+        </section>
       )}
     </div>
   )

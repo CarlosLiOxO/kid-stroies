@@ -87,27 +87,36 @@ const ChildrenPage = () => {
   }
 
   return (
-    <div className="page-container space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="page-title mb-2">孩子管理</h1>
-          <p className="text-amber-700">通过自然语言描述孩子特征，系统会自动整理为结构化画像。</p>
-        </div>
-        {currentChild ? (
-          <div className="rounded-full bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700">
-            当前孩子：{currentChild.name}
+    <div className="fairy-shell fairy-stack">
+      <section className="fairy-hero space-y-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <span className="fairy-kicker">成长档案工坊</span>
+            <h1 className="fairy-title text-3xl md:text-4xl">孩子管理</h1>
+            <p className="fairy-subtitle max-w-2xl">
+              用自然语言记录孩子今天的状态，系统会帮你整理成更稳定的成长画像与故事主角设定。
+            </p>
           </div>
-        ) : null}
-      </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="fairy-stat-pill">共 {children.length} 个档案</span>
+            {currentChild ? <span className="fairy-chip-lilac">当前档案：{currentChild.name}</span> : null}
+          </div>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="story-card p-6">
-          <h2 className="mb-4 text-xl font-bold text-purple-700">
-            {editingChild ? `编辑 ${editingChild.name} 的档案` : '添加新的孩子档案'}
-          </h2>
+        <section className="fairy-panel p-6 sm:p-8">
+          <div className="mb-5 space-y-2">
+            <h2 className="fairy-section-title">
+              {editingChild ? `编辑 ${editingChild.name} 的档案` : '添加新的孩子档案'}
+            </h2>
+            <p className="fairy-subtitle">
+              从昵称、年龄、性格和今天的小情绪开始，让 AI 更懂这个故事小主角。
+            </p>
+          </div>
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">孩子昵称</label>
+              <label className="mb-1 block text-sm font-medium text-[#6d4c41]">孩子昵称</label>
               <input
                 className="input-field"
                 onChange={(event) => setName(event.target.value)}
@@ -117,7 +126,7 @@ const ChildrenPage = () => {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">自然语言描述</label>
+              <label className="mb-1 block text-sm font-medium text-[#6d4c41]">自然语言描述</label>
               <textarea
                 className="input-field min-h-36 resize-y"
                 onChange={(event) => setDescription(event.target.value)}
@@ -126,10 +135,13 @@ const ChildrenPage = () => {
                 value={description}
               />
             </div>
-            {error ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p> : null}
+            <div className="fairy-surface-muted text-sm leading-7 text-[#7d6d64]">
+              示例：`6岁女孩，最近开始自己睡觉，白天爱画画，遇到陌生人会有点害羞。`
+            </div>
+            {error ? <p className="fairy-message-error">{error}</p> : null}
             <div className="flex gap-3">
               <button className="btn-primary flex-1" disabled={isLoading} type="submit">
-                {isLoading ? '保存中...' : submitLabel}
+                {isLoading ? '正在整理画像...' : submitLabel}
               </button>
               {editingChild ? (
                 <button className="btn-outline" onClick={handleCancelEdit} type="button">
@@ -142,37 +154,33 @@ const ChildrenPage = () => {
 
         <section className="space-y-4">
           {children.length === 0 ? (
-            <div className="story-card p-8 text-center">
-              <p className="text-lg text-gray-500">还没有添加孩子，先创建一个专属档案吧。</p>
+            <div className="fairy-empty">
+              还没有添加孩子，先创建一个专属档案吧。
             </div>
           ) : (
             children.map((child) => {
               const tags = parseChildTags(child.tags)
               return (
-                <article className="story-card p-6" key={child.id}>
+                <article className="fairy-archive-card" key={child.id}>
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <div className="flex items-center gap-3">
-                        <h3 className="text-xl font-bold text-amber-800">{child.name}</h3>
+                        <h3 className="text-xl font-bold text-[#6d4c41]">{child.name}</h3>
                         {currentChild?.id === child.id ? (
-                          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
-                            当前使用中
-                          </span>
+                          <span className="fairy-chip-warm">当前使用中</span>
                         ) : null}
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-[#8f7d72]">
                         {child.age ? `${child.age} 岁` : '年龄待提取'} · {child.gender ?? '未设置性别'}
                       </p>
-                      <p className="text-sm leading-6 text-gray-600">
-                        性格：{child.personality ?? '待提取'} | 关注点：{child.concerns ?? '待补充'}
-                      </p>
+                      <div className="fairy-surface-muted space-y-2 text-sm leading-7 text-[#7d6d64]">
+                        <p>性格：{child.personality ?? '待提取'}</p>
+                        <p>关注点：{child.concerns ?? '待补充'}</p>
+                      </div>
                       {tags.length > 0 ? (
                         <div className="flex flex-wrap gap-2">
                           {tags.map((tag) => (
-                            <span
-                              className="rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700"
-                              key={tag}
-                            >
+                            <span className="fairy-chip-lilac" key={tag}>
                               {tag}
                             </span>
                           ))}

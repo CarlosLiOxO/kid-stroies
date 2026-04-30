@@ -17,6 +17,7 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [purchaseAmount, setPurchaseAmount] = useState(50)
+  const [isPurchasing, setIsPurchasing] = useState(false)
 
   useEffect(() => {
     /**
@@ -42,44 +43,52 @@ const ProfilePage = () => {
   }, [])
 
   return (
-    <div className="page-container max-w-4xl space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="page-title mb-2">个人中心</h1>
-          <p className="text-amber-700">查看账号资料、剩余 Token 和最近的消费收益记录。</p>
+    <div className="fairy-shell fairy-stack max-w-5xl">
+      <section className="fairy-hero space-y-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-3">
+            <span className="fairy-kicker">账户与资产小屋</span>
+            <h1 className="fairy-title text-3xl md:text-4xl">个人中心</h1>
+            <p className="fairy-subtitle max-w-2xl">查看账号资料、剩余 Token 和最近的消费收益记录。</p>
+          </div>
+          <button className="btn-outline" onClick={logout} type="button">
+            退出登录
+          </button>
         </div>
-        <button className="btn-outline" onClick={logout} type="button">
-          退出登录
-        </button>
-      </div>
+      </section>
 
-      {error ? <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div> : null}
+      {error ? <div className="fairy-message-error">{error}</div> : null}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="story-card p-6 space-y-4">
+        <section className="fairy-panel space-y-5 p-6">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-purple-200">
-              <span className="text-2xl">👤</span>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f4ebff] text-2xl text-[#7b57c8]">
+              👤
             </div>
             <div>
-              <h2 className="text-lg font-bold text-purple-700">{profile?.name ?? '家长用户'}</h2>
-              <p className="text-gray-500">{profile?.email ?? '暂无邮箱信息'}</p>
+              <h2 className="text-lg font-bold text-[#6d4c41]">{profile?.name ?? '家长用户'}</h2>
+              <p className="text-sm text-[#8f7d72]">{profile?.email ?? '暂无邮箱信息'}</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 border-t border-amber-100 pt-4 md:grid-cols-2">
-            <div className="rounded-2xl bg-amber-50 p-4">
-              <p className="text-sm text-gray-500">剩余代币</p>
-              <p className="mt-2 text-3xl font-bold text-amber-500">{profile?.tokens ?? 0}</p>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="fairy-surface-muted">
+              <p className="text-sm text-[#8f7d72]">剩余代币</p>
+              <p className="mt-2 text-3xl font-bold text-[#6d4c41]">{profile?.tokens ?? 0}</p>
             </div>
-            <div className="rounded-2xl bg-purple-50 p-4">
-              <p className="text-sm text-gray-500">加入时间</p>
-              <p className="mt-2 text-base font-semibold text-purple-700">
+            <div className="fairy-surface-muted">
+              <p className="text-sm text-[#8f7d72]">加入时间</p>
+              <p className="mt-2 text-base font-semibold text-[#7b57c8]">
                 {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('zh-CN') : '未知'}
               </p>
             </div>
           </div>
-          <div className="rounded-2xl border border-amber-100 p-4">
-            <p className="mb-3 font-semibold text-amber-800">模拟充值 Token</p>
+
+          <div className="fairy-surface-muted space-y-3">
+            <div>
+              <p className="font-semibold text-[#6d4c41]">模拟充值 Token</p>
+              <p className="mt-1 text-sm text-[#7d6d64]">先用一小笔充值验证你的账户与故事消费链路是否正常。</p>
+            </div>
             <div className="flex flex-col gap-3 md:flex-row">
               <input
                 className="input-field"
@@ -90,29 +99,41 @@ const ProfilePage = () => {
               />
               <button
                 className="btn-primary"
-                onClick={() => void handlePurchase(purchaseAmount, setProfile, setRecords, setError)}
+                disabled={isPurchasing}
+                onClick={() =>
+                  void handlePurchase(
+                    purchaseAmount,
+                    setProfile,
+                    setRecords,
+                    setError,
+                    setIsPurchasing
+                  )
+                }
                 type="button"
               >
-                立即充值
+                {isPurchasing ? '充值中...' : '立即充值'}
               </button>
             </div>
           </div>
         </section>
 
-        <section className="story-card p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-purple-700">最近 Token 流水</h2>
-            {isLoading ? <span className="text-sm text-gray-400">加载中...</span> : null}
+        <section className="fairy-panel p-6">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="fairy-section-title">最近 Token 流水</h2>
+              <p className="fairy-subtitle mt-2">像账本一样查看最近的收益、消费和充值记录。</p>
+            </div>
+            {isLoading ? <span className="text-sm text-[#9a887d]">加载中...</span> : null}
           </div>
           {records.length === 0 ? (
-            <div className="rounded-2xl bg-amber-50 p-6 text-sm text-gray-500">暂无 Token 记录。</div>
+            <div className="fairy-empty">暂无 Token 记录。</div>
           ) : (
             <div className="space-y-3">
               {records.map((record) => (
-                <article className="flex items-center justify-between rounded-2xl border border-amber-100 p-4" key={record.id}>
+                <article className="fairy-ledger-row" key={record.id}>
                   <div>
-                    <p className="font-medium text-amber-800">{record.description}</p>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="font-medium text-[#6d4c41]">{record.description}</p>
+                    <p className="mt-1 text-xs text-[#8f7d72]">
                       {new Date(record.createdAt).toLocaleString('zh-CN')}
                     </p>
                   </div>
@@ -138,9 +159,11 @@ async function handlePurchase(
   amount: number,
   setProfile: React.Dispatch<React.SetStateAction<User | null>>,
   setRecords: React.Dispatch<React.SetStateAction<TokenRecord[]>>,
-  setError: React.Dispatch<React.SetStateAction<string>>
+  setError: React.Dispatch<React.SetStateAction<string>>,
+  setIsPurchasing: React.Dispatch<React.SetStateAction<boolean>>
 ): Promise<void> {
   try {
+    setIsPurchasing(true)
     setError('')
     await tokenService.purchase(amount)
     const [user, tokenRecords] = await Promise.all([authService.getProfile(), tokenService.getRecords()])
@@ -150,6 +173,8 @@ async function handlePurchase(
   } catch (err) {
     const message = err instanceof Error ? err.message : '充值失败'
     setError(message)
+  } finally {
+    setIsPurchasing(false)
   }
 }
 

@@ -98,18 +98,25 @@ const CommunityPage = () => {
   }
 
   return (
-    <div className="page-container space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="page-title mb-2">故事社区</h1>
-          <p className="text-amber-700">探索其他家长分享的公开故事，找到灵感后也可以下载到自己的故事库。</p>
+    <div className="fairy-shell fairy-stack">
+      <section className="fairy-hero space-y-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <span className="fairy-kicker">故事集市</span>
+            <h1 className="fairy-title">逛逛别的家长分享的灵感，把喜欢的故事带回自己的书架</h1>
+            <p className="fairy-subtitle max-w-2xl">
+              浏览公开故事、发现主题灵感和教育表达，遇到喜欢的故事时，可以一键下载回自己的故事库。
+            </p>
+          </div>
+          <div className="fairy-token-pill">我的余额：{user?.tokens ?? 0} Token</div>
         </div>
-        <div className="rounded-full bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700">
-          我的余额：{user?.tokens ?? 0} Token
-        </div>
-      </div>
+      </section>
 
-      <section className="story-card p-6">
+      <section className="fairy-filter-bar">
+        <div className="mb-4">
+          <h2 className="fairy-section-title">探索灵感</h2>
+          <p className="fairy-subtitle mt-2">按年龄、主题和热度筛选社区里正在流动的故事灵感。</p>
+        </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <input
             className="input-field"
@@ -142,58 +149,60 @@ const CommunityPage = () => {
         </div>
       </section>
 
-      {message ? <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
-      {error ? <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div> : null}
+      {message ? <div className="fairy-message-success">{message}</div> : null}
+      {error ? <div className="fairy-message-error">{error}</div> : null}
 
       {isLoading ? (
-        <div className="story-card p-8 text-center text-gray-500">社区故事加载中...</div>
+        <div className="fairy-empty">社区故事加载中...</div>
       ) : filteredStories.length === 0 ? (
-        <div className="story-card p-8 text-center text-gray-500">暂时没有匹配的公开故事。</div>
+        <div className="fairy-empty">暂时没有匹配的公开故事。</div>
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {filteredStories.map((story) => {
             const preview = parseStoryPreview(story.content)
             const image = parseImages(story.images)[0]
             return (
-              <article className="story-card overflow-hidden" key={story.id}>
-                <div className="h-48 bg-amber-100">
-                  {image ? (
-                    <img alt={story.title} className="h-full w-full object-cover" src={image} />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-5xl">✨</div>
-                  )}
-                </div>
-                <div className="space-y-4 p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h2 className="text-xl font-bold text-amber-800">
-                        <Link className="hover:text-amber-600 hover:underline" to={`/stories/${story.id}`}>{story.title}</Link>
-                      </h2>
-                      <p className="mt-1 text-sm text-gray-500">
-                        {story.user ? (
-                          <span className="flex items-center gap-1">
-                            <span>👤 {story.user.name}</span>
-                            <span className="text-gray-300">·</span>
-                          </span>
-                        ) : null}
-                        {story.theme ?? '成长主题'} · {story.educationalGoal ?? '睡前陪伴'}
-                      </p>
+              <article className="fairy-book-card" key={story.id}>
+                <Link
+                  aria-label={`查看社区故事详情：${story.title}`}
+                  className="block transition-opacity duration-200 hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-[#d9c3ff]"
+                  to={`/stories/${story.id}`}
+                >
+                  <div className="fairy-book-cover relative h-52">
+                    <div className="absolute right-4 top-4 z-10">
+                      <span className="fairy-chip-warm">{sortBy === 'popular' ? '热门' : '新分享'}</span>
                     </div>
-                    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
-                      {story.downloadCount ?? 0} 次下载
-                    </span>
+                    {image ? (
+                      <img alt={story.title} className="h-full w-full object-cover" src={image} />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-5xl">✨</div>
+                    )}
                   </div>
-                  <p className="text-sm leading-6 text-gray-600">{preview}</p>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700">
-                      {story.style ?? '睡前'}
-                    </span>
-                    <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700">
-                      {story.artStyle ?? '水彩'}
-                    </span>
+                  <div className="space-y-4 p-6">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h2 className="text-xl font-bold text-[#6d4c41] hover:text-[#b7773a]">{story.title}</h2>
+                        <p className="mt-1 text-sm text-[#9a887d]">
+                          {story.user?.name ? `分享者：${story.user.name}` : '社区家长分享'}
+                        </p>
+                        <p className="mt-2 text-sm text-[#7d6d64]">
+                          {story.theme ?? '成长主题'} · {story.educationalGoal ?? '睡前陪伴'}
+                        </p>
+                      </div>
+                      <span className="fairy-chip-lilac">
+                        {story.downloadCount ?? 0} 次下载
+                      </span>
+                    </div>
+                    <p className="line-clamp-4 text-sm leading-7 text-[#7d6d64]">{preview}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="fairy-chip-lilac">{story.style ?? '睡前'}</span>
+                      <span className="fairy-chip-rose">{story.artStyle ?? '水彩'}</span>
+                    </div>
                   </div>
+                </Link>
+                <div className="px-6 pb-6">
                   <button className="btn-primary w-full" onClick={() => void handleDownload(story)} type="button">
-                    下载完整故事（6 Token）
+                    带回我的故事库（6 Token）
                   </button>
                 </div>
               </article>

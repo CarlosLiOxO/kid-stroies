@@ -71,18 +71,29 @@ const StoriesPage = () => {
   }
 
   return (
-    <div className="page-container space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="page-title mb-2">故事库</h1>
-          <p className="text-amber-700">集中管理你生成过的所有故事，并决定是否推送到孩子端或分享到社区。</p>
+    <div className="fairy-shell fairy-stack">
+      <section className="fairy-hero space-y-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <span className="fairy-kicker">绘本书架</span>
+            <h1 className="fairy-title">把每一次创作，都收进属于孩子的故事书架</h1>
+            <p className="fairy-subtitle max-w-2xl">
+              在这里统一查看你生成过的故事，决定是否推送到孩子端、分享到社区，或继续回到详情页完善它。
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="fairy-stat-pill">共 {filteredStories.length} 篇故事</span>
+            <span className="fairy-stat-pill">已推送 {pushedStories.length} 篇</span>
+            <span className="fairy-stat-pill">已公开 {stories.filter((story) => story.isPublic).length} 篇</span>
+          </div>
         </div>
-        <div className="rounded-full bg-amber-100 px-4 py-2 text-sm font-medium text-amber-700">
-          共 {filteredStories.length} 篇故事
-        </div>
-      </div>
+      </section>
 
-      <section className="story-card p-6">
+      <section className="fairy-filter-bar">
+        <div className="mb-4">
+          <h2 className="fairy-section-title">筛选你的绘本</h2>
+          <p className="fairy-subtitle mt-2">按标题、孩子、可见性快速找到想继续管理的故事。</p>
+        </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <input
             className="input-field"
@@ -110,26 +121,27 @@ const StoriesPage = () => {
         </div>
       </section>
 
-      {error ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="fairy-message-error">{error}</p> : null}
 
       {pushedStories.length > 0 ? (
-        <section className="story-card p-6">
+        <section className="fairy-panel p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-purple-700">最近推送历史</h2>
-            <span className="text-sm text-gray-500">共 {pushedStories.length} 次推送</span>
+            <div>
+              <h2 className="fairy-section-title">最近推送历史</h2>
+              <p className="fairy-subtitle mt-2">这些故事已经被送到孩子端，可以继续作为下一次创作的灵感。</p>
+            </div>
+            <span className="fairy-chip-lilac">共 {pushedStories.length} 次推送</span>
           </div>
           <div className="space-y-3">
             {pushedStories.slice(0, 5).map((story) => (
-              <article className="flex items-center justify-between rounded-2xl border border-amber-100 p-4" key={story.id}>
+              <article className="fairy-surface-muted flex items-center justify-between gap-4" key={story.id}>
                 <div>
-                  <p className="font-semibold text-amber-800">{story.title}</p>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="font-semibold text-[#6d4c41]">{story.title}</p>
+                  <p className="mt-1 text-xs text-[#9a887d]">
                     推送时间：{story.pushedAt ? new Date(story.pushedAt).toLocaleString('zh-CN') : '刚刚推送'}
                   </p>
                 </div>
-                <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700">
-                  已推送
-                </span>
+                <span className="fairy-chip-rose">已推送</span>
               </article>
             ))}
           </div>
@@ -137,54 +149,60 @@ const StoriesPage = () => {
       ) : null}
 
       {isLoading ? (
-        <div className="story-card p-8 text-center text-gray-500">故事加载中...</div>
+        <div className="fairy-empty">故事加载中...</div>
       ) : filteredStories.length === 0 ? (
-        <div className="story-card p-8 text-center text-gray-500">还没有匹配的故事，先去创建一篇吧。</div>
+        <div className="fairy-empty">还没有匹配的故事，先去创建一篇吧。</div>
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {filteredStories.map((story) => {
             const images = parseImages(story.images)
             const childName = children.find((child) => child.id === story.childId)?.name ?? '未关联孩子'
             return (
-              <article className="story-card overflow-hidden" key={story.id}>
-                <div className="h-48 bg-amber-100">
-                  {images[0] ? (
-                    <img alt={story.title} className="h-full w-full object-cover" src={images[0]} />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-5xl">📖</div>
-                  )}
-                </div>
-                <div className="space-y-4 p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h2 className="text-xl font-bold text-amber-800">
-                        <Link className="hover:text-amber-600 hover:underline" to={`/stories/${story.id}`}>{story.title}</Link>
-                      </h2>
-                      <p className="mt-1 text-sm text-gray-500">
-                        {childName} · {story.theme ?? '成长主题'} ·{' '}
-                        {new Date(story.createdAt).toLocaleDateString('zh-CN')}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700">
-                        {story.isPublic ? '已公开' : '私密'}
-                      </span>
-                      <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700">
-                        {story.isPushed ? '已推送' : '未推送'}
-                      </span>
-                    </div>
+              <article className="fairy-book-card" key={story.id}>
+                <Link
+                  aria-label={`查看故事详情：${story.title}`}
+                  className="block transition-opacity duration-200 hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-[#d9c3ff]"
+                  to={`/stories/${story.id}`}
+                >
+                  <div className="fairy-book-cover h-52">
+                    {images[0] ? (
+                      <img alt={story.title} className="h-full w-full object-cover" src={images[0]} />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-5xl">📖</div>
+                    )}
                   </div>
+                  <div className="space-y-4 p-6">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h2 className="text-xl font-bold text-[#6d4c41] hover:text-[#b7773a]">{story.title}</h2>
+                        <p className="mt-1 text-sm text-[#9a887d]">
+                          {childName} · {story.theme ?? '成长主题'} ·{' '}
+                          {new Date(story.createdAt).toLocaleDateString('zh-CN')}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className={story.isPublic ? 'fairy-chip-lilac' : 'fairy-chip-warm'}>
+                          {story.isPublic ? '已公开' : '私密'}
+                        </span>
+                        <span className={story.isPushed ? 'fairy-chip-rose' : 'fairy-chip-sky'}>
+                          {story.isPushed ? '已推送' : '未推送'}
+                        </span>
+                      </div>
+                    </div>
 
-                  <p className="line-clamp-3 text-sm leading-6 text-gray-600">
-                    {story.summary ?? firstStoryParagraph(story.content)}
-                  </p>
+                    <p className="line-clamp-3 text-sm leading-7 text-[#7d6d64]">
+                      {story.summary ?? firstStoryParagraph(story.content)}
+                    </p>
+                  </div>
+                </Link>
 
+                <div className="px-6 pb-6">
                   <div className="flex flex-wrap gap-3">
-                    <button className="btn-outline" onClick={() => void handleTogglePublic(story)} type="button">
-                      {story.isPublic ? '设为私密' : '公开到社区'}
-                    </button>
                     <button className="btn-secondary" onClick={() => void handlePush(story)} type="button">
                       推送到孩子端
+                    </button>
+                    <button className="btn-outline" onClick={() => void handleTogglePublic(story)} type="button">
+                      {story.isPublic ? '设为私密' : '公开到社区'}
                     </button>
                     <button className="btn-outline" onClick={() => void handleDelete(story)} type="button">
                       删除
