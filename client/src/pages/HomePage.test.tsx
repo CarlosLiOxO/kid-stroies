@@ -15,6 +15,7 @@ describe('HomePage', () => {
     expect(screen.getByText('创建故事')).toBeInTheDocument()
     expect(screen.getByText('故事库')).toBeInTheDocument()
     expect(screen.getByText('社区分享')).toBeInTheDocument()
+    expect(screen.queryByText('3 个核心入口')).not.toBeInTheDocument()
   })
 
   it('首页快捷入口跳转到对应页面', () => {

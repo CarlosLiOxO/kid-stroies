@@ -12,7 +12,7 @@ const HomePage = () => {
       to: '/create-story',
       detail: '把今天的小情绪编成今晚的睡前故事',
       accent: 'fairy-chip-lilac',
-      icon: '羽',
+      icon: '✨',
     },
     {
       title: '故事库',
@@ -20,7 +20,7 @@ const HomePage = () => {
       to: '/stories',
       detail: '像翻阅绘本书架一样管理每一次创作',
       accent: 'fairy-chip-warm',
-      icon: '书',
+      icon: '📚',
     },
     {
       title: '社区分享',
@@ -28,7 +28,7 @@ const HomePage = () => {
       to: '/community',
       detail: '逛逛其他家长的灵感，带回喜欢的故事',
       accent: 'fairy-chip-rose',
-      icon: '星',
+      icon: '🌟',
     },
   ]
 
@@ -89,12 +89,9 @@ const HomePage = () => {
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="fairy-section-title">今晚想从哪里开始</h2>
-            <p className="fairy-subtitle">把常用入口做成像绘本目录一样清晰，方便你快速进入今天的故事旅程。</p>
-          </div>
-          <div className="fairy-stat-pill">3 个核心入口</div>
+        <div>
+          <h2 className="fairy-section-title">今晚想从哪里开始</h2>
+          <p className="fairy-subtitle">把常用入口做成像绘本目录一样清晰，方便你快速进入今天的故事旅程。</p>
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {quickActions.map((action) => (
