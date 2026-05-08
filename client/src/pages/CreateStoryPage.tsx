@@ -1,8 +1,25 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react'
+import { Link } from 'react-router-dom'
 import type { Story } from '../types'
 import { useAuthStore } from '../stores/authStore'
 import { useChildStore } from '../stores/childStore'
 import { useStoryStore } from '../stores/storyStore'
+import {
+  ART_STYLE_OPTIONS,
+  STORY_STYLE_OPTIONS,
+  createAiMessage,
+  createInitialInterviewState,
+  createUserMessage,
+  findChildByInput,
+  getOpeningMessages,
+  getStepPrompt,
+  getStepSuggestions,
+  normalizeArtStyle,
+  normalizeStoryStyle,
+  type InterviewMessage,
+  type InterviewStep,
+} from '../features/create-story/interviewConfig'
+import { buildCreateStoryRequest } from '../features/create-story/interviewMapper'
 
 /**
  * 创建故事页 - AI 辅助生成个性化童话故事
@@ -20,45 +37,162 @@ const CreateStoryPage = () => {
   const error = useStoryStore((state) => state.error)
   const clearError = useStoryStore((state) => state.clearError)
 
-  const [selectedChildId, setSelectedChildId] = useState('')
-  const [prompt, setPrompt] = useState('')
-  const [style, setStyle] = useState('睡前')
-  const [artStyle, setArtStyle] = useState('水彩')
-  const [theme, setTheme] = useState('')
-  const [educationalGoal, setEducationalGoal] = useState('')
-  const [isPublic, setIsPublic] = useState(false)
+  const [childrenReady, setChildrenReady] = useState(false)
+  const [messages, setMessages] = useState<InterviewMessage[]>([])
+  const [currentStep, setCurrentStep] = useState<InterviewStep>('child')
+  const [draftInput, setDraftInput] = useState('')
+  const [interviewState, setInterviewState] = useState(createInitialInterviewState)
   const [generatedStory, setGeneratedStory] = useState<Story | null>(null)
-  const storyStyles = ['睡前', '冒险', '治愈', '教育']
-  const artStyles = ['水彩', '卡通', '油画', '梦幻']
 
   useEffect(() => {
-    void fetchChildren()
+    let active = true
+
+    /**
+     * 初始化孩子列表，确保采访流在拿到档案后再开场。
+     */
+    const loadChildren = async () => {
+      try {
+        await fetchChildren()
+      } finally {
+        if (active) {
+          setChildrenReady(true)
+        }
+      }
+    }
+
+    void loadChildren()
+
+    return () => {
+      active = false
+    }
   }, [fetchChildren])
 
-  const effectiveChildId = selectedChildId || currentChild?.id || children[0]?.id || ''
+  useEffect(() => {
+    if (!childrenReady || messages.length > 0) {
+      return
+    }
 
-  const currentPreviewChild = useMemo(
-    () => children.find((child) => child.id === effectiveChildId) ?? null,
-    [children, effectiveChildId]
+    const initialChild = currentChild ?? (children.length === 1 ? children[0] : null)
+
+    if (initialChild) {
+      setCurrentChild(initialChild)
+      setInterviewState((state) => ({
+        ...state,
+        childId: initialChild.id,
+      }))
+    }
+
+    setMessages(getOpeningMessages(children, initialChild))
+    setCurrentStep(children.length === 1 && initialChild ? 'incident' : 'child')
+  }, [children, childrenReady, currentChild, messages.length, setCurrentChild])
+
+  const currentPreviewChild = useMemo(() => {
+    if (interviewState.childId) {
+      return children.find((child) => child.id === interviewState.childId) ?? null
+    }
+    return currentChild ?? null
+  }, [children, currentChild, interviewState.childId])
+
+  const quickReplies = useMemo(() => getStepSuggestions(currentStep, children), [children, currentStep])
+
+  const interviewSummary = useMemo(
+    () => [
+      { label: '故事主角', value: currentPreviewChild?.name ?? '还未选择' },
+      { label: '今晚线索', value: interviewState.incident || '等待补充' },
+      { label: '成长目标', value: interviewState.educationalGoal || '等待补充' },
+      { label: '故事口吻', value: interviewState.style },
+      { label: '插画风格', value: interviewState.artStyle },
+    ],
+    [currentPreviewChild?.name, interviewState]
   )
 
+  const appendAiMessage = (text: string) => {
+    appendMessage(setMessages, createAiMessage(text))
+  }
+
   /**
-   * 提交故事生成请求
+   * 处理采访回答并推进到下一步。
    */
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleAnswerSubmit = async () => {
+    const answer = draftInput.trim()
+    if (!answer || isLoading || children.length === 0) {
+      return
+    }
+
+    setDraftInput('')
+    setMessages((prev) => [...prev, createUserMessage(answer)])
+
+    switch (currentStep) {
+      case 'child': {
+        const matchedChild = findChildByInput(children, answer)
+        if (!matchedChild) {
+          appendAiMessage('我还没认出这个名字，点一下下面的孩子名字会更快一些。')
+          return
+        }
+
+        setCurrentChild(matchedChild)
+        setInterviewState((state) => ({
+          ...state,
+          childId: matchedChild.id,
+        }))
+        setCurrentStep('incident')
+        appendAiMessage(getStepPrompt('incident', matchedChild.name))
+        return
+      }
+
+      case 'incident':
+        setInterviewState((state) => ({
+          ...state,
+          incident: answer,
+        }))
+        setCurrentStep('goal')
+        appendAiMessage(getStepPrompt('goal'))
+        return
+
+      case 'goal':
+        setInterviewState((state) => ({
+          ...state,
+          educationalGoal: answer,
+        }))
+        setCurrentStep('style')
+        appendAiMessage(getStepPrompt('style'))
+        return
+
+      case 'style': {
+        const normalizedStyle = normalizeStoryStyle(answer)
+        setInterviewState((state) => ({
+          ...state,
+          style: normalizedStyle,
+        }))
+        setCurrentStep('artStyle')
+        appendAiMessage(`收到，这次我会写成更偏“${normalizedStyle}”的口吻。${getStepPrompt('artStyle')}`)
+        return
+      }
+
+      case 'artStyle': {
+        const normalizedArtStyle = normalizeArtStyle(answer)
+        setInterviewState((state) => ({
+          ...state,
+          artStyle: normalizedArtStyle,
+        }))
+        setCurrentStep('summary')
+        appendAiMessage(getStepPrompt('summary'))
+        return
+      }
+
+      case 'summary':
+        return
+    }
+  }
+
+  /**
+   * 确认摘要后调用现有故事生成链路。
+   */
+  const handleGenerateStory = async () => {
     clearError()
 
     try {
-      const story = await addStory({
-        childId: effectiveChildId || undefined,
-        prompt,
-        style,
-        artStyle,
-        isPublic,
-        theme: theme || undefined,
-        educationalGoal: educationalGoal || undefined,
-      })
+      const story = await addStory(buildCreateStoryRequest(interviewState))
       setGeneratedStory(story)
       await refreshProfile()
     } catch {
@@ -66,36 +200,65 @@ const CreateStoryPage = () => {
     }
   }
 
-  const pages = parseStoryPages(generatedStory?.content)
-  const images = parseImages(generatedStory?.images)
+  /**
+   * 允许用户在摘要阶段跳回指定步骤微调答案。
+   */
+  const jumpToStep = (step: InterviewStep) => {
+    setCurrentStep(step)
+    appendAiMessage(getStepPrompt(step, currentPreviewChild?.name))
+  }
+
+  /**
+   * 重新开始采访，并尽量保留已识别到的孩子。
+   */
+  const restartInterview = () => {
+    const initialState = createInitialInterviewState()
+    const retainedChild = currentPreviewChild ?? (children.length === 1 ? children[0] : null)
+    const nextState = retainedChild
+      ? {
+          ...initialState,
+          childId: retainedChild.id,
+        }
+      : initialState
+
+    setInterviewState(nextState)
+    setGeneratedStory(null)
+    setDraftInput('')
+    setMessages(getOpeningMessages(children, retainedChild))
+    setCurrentStep(retainedChild ? 'incident' : 'child')
+  }
+
+  const pages = generatedStory?.pages ?? []
+  const images = generatedStory?.images ?? []
+  const showComposer = childrenReady && children.length > 0 && currentStep !== 'summary'
 
   return (
     <div className="fairy-shell fairy-stack">
       <section className="fairy-hero grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div className="space-y-4">
-          <span className="fairy-kicker">故事编织台</span>
-          <h1 className="fairy-title">把今天发生的小事，织进一篇温柔的睡前故事</h1>
+          <span className="fairy-kicker">AI 采访式编织台</span>
+          <h1 className="fairy-title">先聊一聊今天的小事，再把它织成一篇刚刚好的睡前故事</h1>
           <p className="fairy-subtitle max-w-2xl">
-            输入孩子今天的经历、想练习的习惯或需要陪伴的小情绪，系统会自动生成适合朗读的童话与插画。
+            现在不用再填长表单了。AI 会像采访一样一步步陪你梳理孩子、情境、成长目标和画风偏好，再生成今晚的绘本故事。
           </p>
           <div className="flex flex-wrap gap-2">
-            <span className="fairy-chip-warm">按年龄自动适配篇幅</span>
-            <span className="fairy-chip-lilac">支持插画风格</span>
-            <span className="fairy-chip-rose">可同步分享到社区</span>
+            <span className="fairy-chip-warm">一轮一问更自然</span>
+            <span className="fairy-chip-lilac">生成前会先总结确认</span>
+            <span className="fairy-chip-rose">仍支持社区分享</span>
           </div>
         </div>
         <div className="fairy-panel grid gap-4 p-6 sm:grid-cols-3">
           <div className="fairy-surface-muted">
             <p className="text-sm font-semibold text-[#b7773a]">第 1 步</p>
-            <p className="mt-2 text-sm leading-6 text-[#7d6d64]">选择孩子，带上当前画像和成长状态。</p>
+            <p className="mt-2 text-sm leading-6 text-[#7d6d64]">先确认今天想写给谁，再进入今晚的小采访。</p>
           </div>
           <div className="fairy-surface-muted">
             <p className="text-sm font-semibold text-[#7b57c8]">第 2 步</p>
-            <p className="mt-2 text-sm leading-6 text-[#7d6d64]">输入故事线索、风格与教育目标。</p>
+            <p className="mt-2 text-sm leading-6 text-[#7d6d64]">AI 帮你梳理今天发生的事、想引导的目标与故事口吻。</p>
           </div>
           <div className="fairy-surface-muted">
             <p className="text-sm font-semibold text-[#c76d8d]">第 3 步</p>
-            <p className="mt-2 text-sm leading-6 text-[#7d6d64]">等待 AI 把主题织成一组绘本页。</p>
+            <p className="mt-2 text-sm leading-6 text-[#7d6d64]">确认采访总结后，等待 AI 把内容织成一组绘本页。</p>
           </div>
         </div>
       </section>
@@ -103,106 +266,28 @@ const CreateStoryPage = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <section className="fairy-panel p-6 sm:p-8">
           <div className="mb-6">
-            <h2 className="fairy-section-title">开始编织故事</h2>
-            <p className="fairy-subtitle mt-2">把孩子、故事线索和想传达的成长目标整理好，剩下的交给 AI。</p>
+            <h2 className="fairy-section-title">开始今晚的小采访</h2>
+            <p className="fairy-subtitle mt-2">你只需要像聊天一样回答，AI 会把散落的线索整理成可生成的故事设定。</p>
           </div>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-[#6d4c41]">选择孩子</label>
-              <select
-                className="input-field"
-                disabled={children.length === 0}
-                onChange={(event) => {
-                  setSelectedChildId(event.target.value)
-                  const child = children.find((item) => item.id === event.target.value) ?? null
-                  setCurrentChild(child)
-                }}
-                required
-                value={effectiveChildId}
-              >
-                <option value="">{children.length === 0 ? '请先添加孩子档案' : '请选择孩子'}</option>
-                {children.map((child) => (
-                  <option key={child.id} value={child.id}>
-                    {child.name}
-                  </option>
-                ))}
-              </select>
+          <div className="space-y-5">
+            <div className="fairy-chat-thread" role="log" aria-label="AI 采访对话">
+              {!childrenReady ? (
+                <div className="fairy-chat-bubble-ai">正在整理孩子档案，马上开始今晚的小采访...</div>
+              ) : (
+                messages.map((message) => (
+                  <article
+                    className={message.role === 'ai' ? 'fairy-chat-bubble-ai' : 'fairy-chat-bubble-user'}
+                    key={message.id}
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-70">
+                      {message.role === 'ai' ? 'AI 采访官' : '你的回答'}
+                    </p>
+                    <p className="mt-2 text-sm leading-7">{message.text}</p>
+                  </article>
+                ))
+              )}
             </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-[#6d4c41]">故事需求</label>
-              <textarea
-                className="input-field min-h-40 resize-y"
-                onChange={(event) => setPrompt(event.target.value)}
-                placeholder="例如：今天弟弟不想刷牙，想生成一个关于刷牙的勇敢故事。"
-                required
-                value={prompt}
-              />
-            </div>
-
-            <div className="grid gap-5">
-              <div className="space-y-3">
-                <label className="block text-sm font-semibold text-[#6d4c41]">故事风格</label>
-                <div className="flex flex-wrap gap-2">
-                  {storyStyles.map((item) => (
-                    <button
-                      className={style === item ? 'fairy-choice-pill-active' : 'fairy-choice-pill-idle'}
-                      key={item}
-                      onClick={() => setStyle(item)}
-                      type="button"
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <label className="block text-sm font-semibold text-[#6d4c41]">插画风格</label>
-                <div className="flex flex-wrap gap-2">
-                  {artStyles.map((item) => (
-                    <button
-                      className={artStyle === item ? 'fairy-choice-pill-active' : 'fairy-choice-pill-idle'}
-                      key={item}
-                      onClick={() => setArtStyle(item)}
-                      type="button"
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-[#6d4c41]">主题（可选）</label>
-                <input
-                  className="input-field"
-                  onChange={(event) => setTheme(event.target.value)}
-                  placeholder="例如：刷牙习惯"
-                  value={theme}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-[#6d4c41]">教育目标（可选）</label>
-                <input
-                  className="input-field"
-                  onChange={(event) => setEducationalGoal(event.target.value)}
-                  placeholder="例如：建立自律习惯"
-                  value={educationalGoal}
-                />
-              </div>
-            </div>
-
-            <label className="fairy-toggle">
-              <input checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} type="checkbox" />
-              <span>
-                <span className="block font-semibold text-[#6d4c41]">同步分享到社区</span>
-                <span className="mt-1 block text-xs text-[#8f7d72]">允许其他家长浏览和下载这篇新生成的故事。</span>
-              </span>
-            </label>
 
             {currentPreviewChild ? (
               <div className="fairy-profile-hint">
@@ -211,12 +296,115 @@ const CreateStoryPage = () => {
               </div>
             ) : null}
 
-            {error ? <p className="fairy-message-error">{error}</p> : null}
+            {childrenReady && children.length === 0 ? (
+              <div className="fairy-empty space-y-4">
+                <p className="text-base font-semibold text-[#6d4c41]">请先添加孩子档案</p>
+                <p>先把今晚故事的小主角建好，我再继续采访并帮你织成故事。</p>
+                <Link className="btn-primary" to="/children">
+                  去添加孩子档案
+                </Link>
+              </div>
+            ) : null}
 
-            <button className="btn-primary w-full" disabled={isLoading || children.length === 0} type="submit">
-              {isLoading ? 'AI 正在编织童话...' : '生成故事'}
-            </button>
-          </form>
+            {showComposer ? (
+              <div className="fairy-interview-card space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {quickReplies.map((suggestion) => (
+                    <button
+                      className="fairy-suggestion-pill"
+                      key={suggestion}
+                      onClick={() => setDraftInput(suggestion)}
+                      type="button"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="fairy-interview-composer">
+                  <label className="sr-only" htmlFor="create-story-interview-input">
+                    采访输入框
+                  </label>
+                  <textarea
+                    aria-label="采访输入框"
+                    className="input-field min-h-28 resize-none"
+                    id="create-story-interview-input"
+                    onChange={(event) => setDraftInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault()
+                        void handleAnswerSubmit()
+                      }
+                    }}
+                    placeholder="像聊天一样回答就可以，AI 会帮你整理成故事设定。"
+                    value={draftInput}
+                  />
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-[#8f7d72]">每次回答一个重点，AI 会继续往下追问。</span>
+                    <button className="btn-primary" onClick={() => void handleAnswerSubmit()} type="button">
+                      发送回答
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {currentStep === 'summary' && children.length > 0 ? (
+              <div className="fairy-summary-card space-y-4">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-bold text-[#6d4c41]">这次故事设定</h3>
+                  <p className="text-sm leading-6 text-[#7d6d64]">如果没问题，就让 AI 按这份采访摘要开始生成。</p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {interviewSummary.map((item) => (
+                    <div className="fairy-surface-muted p-4" key={item.label}>
+                      <p className="text-xs font-semibold tracking-[0.12em] text-[#b68a63] uppercase">{item.label}</p>
+                      <p className="mt-2 text-sm leading-7 text-[#5f5147]">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <label className="fairy-toggle">
+                  <input
+                    checked={interviewState.isPublic}
+                    onChange={(event) =>
+                      setInterviewState((state) => ({
+                        ...state,
+                        isPublic: event.target.checked,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>
+                    <span className="block font-semibold text-[#6d4c41]">同步分享到社区</span>
+                    <span className="mt-1 block text-xs text-[#8f7d72]">允许其他家长浏览和下载这篇新生成的故事。</span>
+                  </span>
+                </label>
+
+                <div className="flex flex-wrap gap-2">
+                  <button className="fairy-suggestion-pill" onClick={() => jumpToStep('child')} type="button">
+                    改孩子
+                  </button>
+                  <button className="fairy-suggestion-pill" onClick={() => jumpToStep('goal')} type="button">
+                    改目标
+                  </button>
+                  <button className="fairy-suggestion-pill" onClick={() => jumpToStep('style')} type="button">
+                    改氛围
+                  </button>
+                  <button className="fairy-suggestion-pill" onClick={restartInterview} type="button">
+                    重新采访
+                  </button>
+                </div>
+
+                <button className="btn-primary w-full" disabled={isLoading} onClick={() => void handleGenerateStory()} type="button">
+                  {isLoading ? 'AI 正在编织童话...' : '就这样生成故事'}
+                </button>
+              </div>
+            ) : null}
+
+            {error ? <p className="fairy-message-error">{error}</p> : null}
+          </div>
         </section>
 
         <section className="fairy-panel p-6 sm:p-8">
@@ -237,19 +425,34 @@ const CreateStoryPage = () => {
                 <div className="h-28 rounded-[24px] bg-white/50" />
               </div>
               <p className="text-sm leading-7 text-[#7d6d64]">
-                星光正在编织故事页，请稍候片刻，系统会把主题、插画与成长目标整合成一篇完整的睡前故事。
+                故事采访已经完成啦，星光正在编织书页，请稍候片刻，系统会把主题、插画与成长目标整理成一篇完整的睡前故事。
               </p>
             </div>
+          ) : !childrenReady ? (
+            <div className="fairy-empty">AI 正在准备今晚的采访舞台，请稍候片刻。</div>
+          ) : children.length === 0 ? (
+            <div className="fairy-empty">等你添加好孩子档案后，这里会出现采访摘要和最终生成的绘本页。</div>
           ) : !generatedStory ? (
             <div className="fairy-empty">
-              还没有生成中的故事。先在左侧填入孩子今天的小故事，这里就会展开一组新的绘本页。
+              {currentStep === 'summary'
+                ? '摘要已经整理好啦，确认后这里就会展开今晚的新故事。'
+                : '先在左侧和 AI 聊一聊孩子今天的小故事，这里就会逐步展开本次采访摘要与新的绘本页。'}
             </div>
           ) : (
             <div className="space-y-5">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="fairy-chip-warm">{generatedStory.style ?? '睡前'}</span>
-                  <span className="fairy-chip-lilac">{generatedStory.artStyle ?? '水彩'}</span>
+                  <span className="fairy-chip-warm">
+                    {generatedStory.style && STORY_STYLE_OPTIONS.includes(generatedStory.style as (typeof STORY_STYLE_OPTIONS)[number])
+                      ? generatedStory.style
+                      : '睡前'}
+                  </span>
+                  <span className="fairy-chip-lilac">
+                    {generatedStory.artStyle &&
+                    ART_STYLE_OPTIONS.includes(generatedStory.artStyle as (typeof ART_STYLE_OPTIONS)[number])
+                      ? generatedStory.artStyle
+                      : '水彩'}
+                  </span>
                   <span className="fairy-chip-rose">{generatedStory.educationalGoal ?? '成长陪伴'}</span>
                 </div>
                 <div className="rounded-[28px] bg-[#fff7ee] p-5">
@@ -287,44 +490,12 @@ const CreateStoryPage = () => {
   )
 }
 
-type StoryPageContent = {
-  page: number
-  text: string
-}
-
-/**
- * 解析故事分页 JSON
- */
-function parseStoryPages(rawContent?: string): StoryPageContent[] {
-  if (!rawContent) {
-    return []
-  }
-
-  try {
-    const parsed = JSON.parse(rawContent) as StoryPageContent[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-/**
- * 解析故事插画列表
- */
-function parseImages(rawImages?: string[] | string | null): string[] {
-  if (!rawImages) {
-    return []
-  }
-  if (Array.isArray(rawImages)) {
-    return rawImages
-  }
-
-  try {
-    const parsed = JSON.parse(rawImages) as string[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
 export default CreateStoryPage
+
+/** 追加一条 AI 消息 */
+function appendMessage(
+  updater: Dispatch<SetStateAction<InterviewMessage[]>>,
+  message: InterviewMessage
+) {
+  updater((prev) => [...prev, message])
+}

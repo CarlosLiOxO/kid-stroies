@@ -56,8 +56,16 @@ export interface StoryChild {
   name: string
 }
 
-/** 故事记录 */
-export interface Story {
+/** 故事单页内容 */
+export interface StoryPage {
+  /** 页码 */
+  page: number
+  /** 当前页正文 */
+  text: string
+}
+
+/** 故事接口原始返回 */
+export interface StoryDTO {
   /** 故事唯一标识 */
   id: string
   /** 创建者用户 ID */
@@ -100,6 +108,16 @@ export interface Story {
   user?: StoryAuthor
   /** 关联孩子简要信息 */
   child?: StoryChild
+}
+
+/** 前端统一消费的故事展示模型 */
+export interface Story extends Omit<StoryDTO, 'content' | 'images'> {
+  /** 已解析的故事分页 */
+  pages: StoryPage[]
+  /** 统一后的插画列表 */
+  images: string[]
+  /** 用于列表/卡片的预览文案 */
+  previewText: string
 }
 
 /** 代币交易记录 */

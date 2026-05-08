@@ -155,7 +155,6 @@ const StoriesPage = () => {
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {filteredStories.map((story) => {
-            const images = parseImages(story.images)
             const childName = children.find((child) => child.id === story.childId)?.name ?? '未关联孩子'
             return (
               <article className="fairy-book-card" key={story.id}>
@@ -165,8 +164,8 @@ const StoriesPage = () => {
                   to={`/stories/${story.id}`}
                 >
                   <div className="fairy-book-cover h-52">
-                    {images[0] ? (
-                      <img alt={story.title} className="h-full w-full object-cover" src={images[0]} />
+                    {story.images[0] ? (
+                      <img alt={story.title} className="h-full w-full object-cover" src={story.images[0]} />
                     ) : (
                       <div className="flex h-full items-center justify-center text-5xl">📖</div>
                     )}
@@ -191,7 +190,7 @@ const StoriesPage = () => {
                     </div>
 
                     <p className="line-clamp-3 text-sm leading-7 text-[#7d6d64]">
-                      {story.summary ?? firstStoryParagraph(story.content)}
+                      {story.summary ?? story.previewText}
                     </p>
                   </div>
                 </Link>
@@ -216,37 +215,6 @@ const StoriesPage = () => {
       )}
     </div>
   )
-}
-
-/**
- * 提取故事首段文案
- */
-function firstStoryParagraph(content: string): string {
-  try {
-    const pages = JSON.parse(content) as Array<{ text?: string }>
-    return pages[0]?.text ?? '点击查看故事详情。'
-  } catch {
-    return content
-  }
-}
-
-/**
- * 解析故事插画字段
- */
-function parseImages(rawImages?: string[] | string | null): string[] {
-  if (!rawImages) {
-    return []
-  }
-  if (Array.isArray(rawImages)) {
-    return rawImages
-  }
-
-  try {
-    const parsed = JSON.parse(rawImages) as string[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
 }
 
 export default StoriesPage

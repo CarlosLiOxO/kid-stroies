@@ -3,11 +3,6 @@ import { Link } from 'react-router-dom'
 import storyService from '../services/storyService'
 import type { Story } from '../types'
 
-type ReaderPage = {
-  page: number
-  text: string
-}
-
 /**
  * 儿童端 - 面向儿童的简化故事阅读界面
  * 展示已推送故事、支持翻页阅读和浏览器 TTS 朗读
@@ -54,9 +49,9 @@ const KidsPage = () => {
     () => stories.find((story) => story.id === selectedStoryId) ?? null,
     [selectedStoryId, stories]
   )
-  const pages = useMemo(() => parseStoryPages(selectedStory?.content), [selectedStory?.content])
+  const pages = selectedStory?.pages ?? []
   const currentPage = pages[pageIndex]
-  const images = useMemo(() => parseImages(selectedStory?.images), [selectedStory?.images])
+  const images = selectedStory?.images ?? []
   const currentImage = images[pageIndex] ?? images[0]
 
   /**
@@ -228,41 +223,6 @@ const KidsPage = () => {
       </div>
     </div>
   )
-}
-
-/**
- * 解析故事分页内容
- */
-function parseStoryPages(rawContent?: string): ReaderPage[] {
-  if (!rawContent) {
-    return []
-  }
-
-  try {
-    const parsed = JSON.parse(rawContent) as ReaderPage[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-/**
- * 解析故事插画数组
- */
-function parseImages(rawImages?: string[] | string | null): string[] {
-  if (!rawImages) {
-    return []
-  }
-  if (Array.isArray(rawImages)) {
-    return rawImages
-  }
-
-  try {
-    const parsed = JSON.parse(rawImages) as string[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
 }
 
 export default KidsPage

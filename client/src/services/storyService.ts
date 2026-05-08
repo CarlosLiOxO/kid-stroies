@@ -1,5 +1,6 @@
 import api from './api'
-import type { ApiResponse, CreateStoryRequest, Story, UpdateStoryRequest } from '../types'
+import { normalizeStories, normalizeStory } from './storyAdapter'
+import type { ApiResponse, CreateStoryRequest, Story, StoryDTO, UpdateStoryRequest } from '../types'
 
 /**
  * 故事管理服务 - 处理故事相关 API 调用
@@ -11,8 +12,8 @@ const storyService = {
    * @returns 故事列表数组
    */
   async getStories(params?: Record<string, string>): Promise<Story[]> {
-    const response = await api.get<ApiResponse<Story[]>>('/stories', { params })
-    return response.data.data
+    const response = await api.get<ApiResponse<StoryDTO[]>>('/stories', { params })
+    return normalizeStories(response.data.data)
   },
 
   /**
@@ -21,8 +22,8 @@ const storyService = {
    * @returns 故事详情
    */
   async getStory(id: string): Promise<Story> {
-    const response = await api.get<ApiResponse<Story>>(`/stories/${id}`)
-    return response.data.data
+    const response = await api.get<ApiResponse<StoryDTO>>(`/stories/${id}`)
+    return normalizeStory(response.data.data)
   },
 
   /**
@@ -31,10 +32,10 @@ const storyService = {
    * @returns 创建的故事
    */
   async createStory(data: CreateStoryRequest): Promise<Story> {
-    const response = await api.post<ApiResponse<Story>>('/stories', data, {
+    const response = await api.post<ApiResponse<StoryDTO>>('/stories', data, {
       timeout: 90000,
     })
-    return response.data.data
+    return normalizeStory(response.data.data)
   },
 
   /**
@@ -44,8 +45,8 @@ const storyService = {
    * @returns 更新后的故事
    */
   async updateStory(id: string, data: UpdateStoryRequest): Promise<Story> {
-    const response = await api.patch<ApiResponse<Story>>(`/stories/${id}`, data)
-    return response.data.data
+    const response = await api.patch<ApiResponse<StoryDTO>>(`/stories/${id}`, data)
+    return normalizeStory(response.data.data)
   },
 
   /**
@@ -54,8 +55,8 @@ const storyService = {
    * @returns 推送后的故事
    */
   async pushStory(id: string): Promise<Story> {
-    const response = await api.post<ApiResponse<Story>>(`/stories/${id}/push`)
-    return response.data.data
+    const response = await api.post<ApiResponse<StoryDTO>>(`/stories/${id}/push`)
+    return normalizeStory(response.data.data)
   },
 
   /**
@@ -64,8 +65,8 @@ const storyService = {
    * @returns 下载后的故事
    */
   async downloadStory(id: string): Promise<Story> {
-    const response = await api.post<ApiResponse<Story>>(`/stories/${id}/download`)
-    return response.data.data
+    const response = await api.post<ApiResponse<StoryDTO>>(`/stories/${id}/download`)
+    return normalizeStory(response.data.data)
   },
 
   /**

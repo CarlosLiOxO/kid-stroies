@@ -28,18 +28,20 @@ describe('CommunityPage', () => {
     getStoriesMock.mockResolvedValueOnce([
       {
         id: 'story-1',
+        userId: 'user-1',
         title: '小月亮和星星邮差',
-        content: JSON.stringify([
+        summary: '一篇适合睡前阅读的温暖冒险故事。',
+        pages: [
           { page: 1, text: '第一页预览' },
           { page: 2, text: '第二页预览' },
-        ]),
-        summary: '一篇适合睡前阅读的温暖冒险故事。',
+        ],
+        previewText: '第一页预览 第二页预览',
         theme: '成长主题',
         educationalGoal: '建立安全感',
         createdAt: '2026-04-29T00:00:00.000Z',
         isPublic: true,
         isPushed: false,
-        images: JSON.stringify([]),
+        images: [],
         downloadCount: 3,
         user: { id: 'user-1', name: '小月亮妈妈' },
         style: '睡前',

@@ -85,7 +85,7 @@ const KidsFavoritesPage = () => {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {displayedStories.map((story, index) => {
-            const image = parseImages(story.images)[0]
+            const image = story.images[0]
             return (
               <article className="fairy-memory-card" key={story.id}>
                 <div className="fairy-book-cover h-44">
@@ -128,17 +128,6 @@ function getFavoriteIds(): string[] {
   try {
     const raw = localStorage.getItem('kid-favorites')
     const parsed = JSON.parse(raw ?? '[]') as string[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-function parseImages(rawImages?: string[] | string | null): string[] {
-  if (!rawImages) return []
-  if (Array.isArray(rawImages)) return rawImages
-  try {
-    const parsed = JSON.parse(rawImages) as string[]
     return Array.isArray(parsed) ? parsed : []
   } catch {
     return []

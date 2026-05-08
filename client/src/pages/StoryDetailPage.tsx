@@ -1,14 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import storyService from '../services/storyService'
 import { useStoryStore } from '../stores/storyStore'
 import { useAuthStore } from '../stores/authStore'
 import type { Story } from '../types'
-
-type ReaderPage = {
-  page: number
-  text: string
-}
 
 /**
  * 故事详情页 - 完整阅读体验
@@ -43,8 +38,8 @@ const StoryDetailPage = () => {
     void loadStory()
   }, [id])
 
-  const pages = useMemo(() => parseStoryPages(story?.content), [story?.content])
-  const images = useMemo(() => parseImages(story?.images), [story?.images])
+  const pages = story?.pages ?? []
+  const images = story?.images ?? []
   const currentPage = pages[pageIndex]
   const isOwnStory = story?.userId === user?.id
   const pageImage = images[pageIndex] ?? images[0]
@@ -238,27 +233,6 @@ const StoryDetailPage = () => {
       )}
     </div>
   )
-}
-
-function parseStoryPages(rawContent?: string): ReaderPage[] {
-  if (!rawContent) return []
-  try {
-    const parsed = JSON.parse(rawContent) as ReaderPage[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-function parseImages(rawImages?: string[] | string | null): string[] {
-  if (!rawImages) return []
-  if (Array.isArray(rawImages)) return rawImages
-  try {
-    const parsed = JSON.parse(rawImages) as string[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
 }
 
 export default StoryDetailPage

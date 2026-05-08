@@ -159,8 +159,8 @@ const CommunityPage = () => {
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {filteredStories.map((story) => {
-            const preview = parseStoryPreview(story.content)
-            const image = parseImages(story.images)[0]
+            const preview = story.summary ?? story.previewText
+            const image = story.images[0]
             return (
               <article className="fairy-book-card" key={story.id}>
                 <Link
@@ -212,37 +212,6 @@ const CommunityPage = () => {
       )}
     </div>
   )
-}
-
-/**
- * 解析故事预览内容
- */
-function parseStoryPreview(content: string): string {
-  try {
-    const pages = JSON.parse(content) as Array<{ text?: string }>
-    return pages.slice(0, 2).map((page) => page.text).filter(Boolean).join(' ')
-  } catch {
-    return content
-  }
-}
-
-/**
- * 解析图片数组
- */
-function parseImages(rawImages?: string[] | string | null): string[] {
-  if (!rawImages) {
-    return []
-  }
-  if (Array.isArray(rawImages)) {
-    return rawImages
-  }
-
-  try {
-    const parsed = JSON.parse(rawImages) as string[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
 }
 
 export default CommunityPage
