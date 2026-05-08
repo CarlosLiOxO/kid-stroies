@@ -73,15 +73,15 @@ export function getOpeningMessages(children: Child[], selectedChild: Child | nul
 export function getStepPrompt(step: InterviewStep, childName?: string | null): string {
   switch (step) {
     case 'child':
-      return '今晚想给哪位小朋友准备故事呀？'
+      return '今晚想把这段小故事送给哪位小朋友呀？'
     case 'incident':
-      return `好呀，那就写给${childName ? ` ${childName}` : '这位小朋友'}。今天发生了什么小事，或者最近有什么想写进故事里的瞬间呢？`
+      return `好呀，那今晚就先陪陪${childName ? ` ${childName}` : '这位小朋友'}。今天发生了什么小事，或者最近有什么想写进故事里的瞬间呢？`
     case 'goal':
-      return '我收到这个线索啦。这次你最想借故事陪伴 TA 学会什么，或者缓解哪种小情绪呢？'
+      return '这次你最想借故事轻轻陪 TA 练习什么，或者缓解哪种小情绪呢？'
     case 'style':
-      return '故事的口吻你更想要哪一种？我可以写得更像温柔睡前，也可以更像冒险闯关。'
+      return '想让我把今晚的故事写得更像轻轻哄睡，还是带一点小冒险的勇气呢？'
     case 'artStyle':
-      return '最后挑一下画面感觉吧。你更想要水彩、卡通、油画，还是梦幻一点的插画？'
+      return '如果把这个故事摊开成绘本，你更想看到柔柔的水彩，还是更可爱一点的画面呢？'
     case 'summary':
       return '我已经把这次采访整理好啦，看看这份故事设定对不对。'
   }
@@ -147,6 +147,32 @@ export function normalizeArtStyle(input: string): string {
   return '水彩'
 }
 
+/** 构建事件后的温柔承接语 */
+export function buildIncidentFollowUp(incident: string): string {
+  const highlight = extractHighlight(incident)
+  return `我记下啦，原来今晚想聊的是${highlight}。`
+}
+
+/** 构建成长目标后的温柔承接语 */
+export function buildGoalFollowUp(goal: string): string {
+  const highlight = extractHighlight(goal)
+  return `明白了，这次故事想悄悄帮 TA 练习${highlight}。`
+}
+
+/** 构建故事风格后的温柔承接语 */
+export function buildStyleFollowUp(style: string): string {
+  return `好呀，那我会把语气写得更偏“${style}”一点。`
+}
+
+/** 构建摘要阶段的自然总结 */
+export function buildSummaryNarration(state: InterviewState, childName?: string | null): string {
+  const childLabel = childName ?? '这位小朋友'
+  const incident = extractHighlight(state.incident)
+  const goal = extractHighlight(state.educationalGoal)
+
+  return `我来确认一下：今晚是写给${childLabel}的，主题围绕${incident}，我会用更偏${state.style}的口吻，把它写成一篇帮助${goal}的${state.artStyle}绘本。`
+}
+
 /** 创建一条 AI 消息 */
 export function createAiMessage(text: string): InterviewMessage {
   return createMessage('ai', text)
@@ -175,4 +201,15 @@ function normalizeInput(input: string): string {
 function matchByKeyword(input: string, keywords: string[]): boolean {
   const normalized = input.trim()
   return keywords.some((keyword) => normalized.includes(keyword))
+}
+
+/** 从用户回答中提炼适合复述的亮点短语 */
+function extractHighlight(input: string): string {
+  const normalized = input.trim()
+  if (!normalized) {
+    return '今晚的小心事'
+  }
+
+  const firstSentence = normalized.split(/[，。！？!?,]/)[0]?.trim() ?? normalized
+  return firstSentence.length > 18 ? `${firstSentence.slice(0, 18)}...` : firstSentence
 }

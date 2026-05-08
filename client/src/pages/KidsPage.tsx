@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import storyService from '../services/storyService'
-import type { Story } from '../types'
+import { normalizeStories } from '../services/storyAdapter'
+import type { Story, StoryDTO } from '../types'
 
 /**
  * 儿童端 - 面向儿童的简化故事阅读界面
@@ -30,7 +31,8 @@ const KidsPage = () => {
     const loadStories = async () => {
       try {
         const data = await storyService.getStories()
-        const pushedStories = data.filter((story) => story.isPushed)
+        const normalizedStories = ensureStoryModels(data)
+        const pushedStories = normalizedStories.filter((story) => story.isPushed)
         setStories(pushedStories)
         if (pushedStories[0]) {
           setSelectedStoryId(pushedStories[0].id)
@@ -226,3 +228,19 @@ const KidsPage = () => {
 }
 
 export default KidsPage
+
+/**
+ * 兼容服务层 mock 直接返回 DTO 的场景，统一转换为页面可消费的 Story 模型。
+ */
+function ensureStoryModels(stories: Story[] | StoryDTO[]): Story[] {
+  if (stories.length === 0) {
+    return []
+  }
+
+  const firstStory = stories[0] as Partial<Story>
+  if (Array.isArray(firstStory.pages)) {
+    return stories as Story[]
+  }
+
+  return normalizeStories(stories as StoryDTO[])
+}

@@ -7,6 +7,10 @@ import { useStoryStore } from '../stores/storyStore'
 import {
   ART_STYLE_OPTIONS,
   STORY_STYLE_OPTIONS,
+  buildGoalFollowUp,
+  buildIncidentFollowUp,
+  buildStyleFollowUp,
+  buildSummaryNarration,
   createAiMessage,
   createInitialInterviewState,
   createUserMessage,
@@ -106,6 +110,11 @@ const CreateStoryPage = () => {
     [currentPreviewChild?.name, interviewState]
   )
 
+  const summaryNarration = useMemo(
+    () => buildSummaryNarration(interviewState, currentPreviewChild?.name),
+    [currentPreviewChild?.name, interviewState]
+  )
+
   const appendAiMessage = (text: string) => {
     appendMessage(setMessages, createAiMessage(text))
   }
@@ -146,7 +155,7 @@ const CreateStoryPage = () => {
           incident: answer,
         }))
         setCurrentStep('goal')
-        appendAiMessage(getStepPrompt('goal'))
+        appendAiMessage(`${buildIncidentFollowUp(answer)}${getStepPrompt('goal')}`)
         return
 
       case 'goal':
@@ -155,7 +164,7 @@ const CreateStoryPage = () => {
           educationalGoal: answer,
         }))
         setCurrentStep('style')
-        appendAiMessage(getStepPrompt('style'))
+        appendAiMessage(`${buildGoalFollowUp(answer)}${getStepPrompt('style')}`)
         return
 
       case 'style': {
@@ -165,7 +174,7 @@ const CreateStoryPage = () => {
           style: normalizedStyle,
         }))
         setCurrentStep('artStyle')
-        appendAiMessage(`收到，这次我会写成更偏“${normalizedStyle}”的口吻。${getStepPrompt('artStyle')}`)
+        appendAiMessage(`${buildStyleFollowUp(normalizedStyle)}${getStepPrompt('artStyle')}`)
         return
       }
 
@@ -353,6 +362,7 @@ const CreateStoryPage = () => {
               <div className="fairy-summary-card space-y-4">
                 <div className="space-y-2">
                   <h3 className="text-lg font-bold text-[#6d4c41]">这次故事设定</h3>
+                  <p className="text-sm leading-7 text-[#7d6d64]">{summaryNarration}</p>
                   <p className="text-sm leading-6 text-[#7d6d64]">如果没问题，就让 AI 按这份采访摘要开始生成。</p>
                 </div>
 
