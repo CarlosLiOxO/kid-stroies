@@ -145,7 +145,7 @@ const CreateStoryPage = () => {
           childId: matchedChild.id,
         }))
         setCurrentStep('incident')
-        appendAiMessage(getStepPrompt('incident', matchedChild.name))
+        appendAiMessage(getStepPrompt('incident', matchedChild.name, matchedChild.name))
         return
       }
 
@@ -155,7 +155,7 @@ const CreateStoryPage = () => {
           incident: answer,
         }))
         setCurrentStep('goal')
-        appendAiMessage(`${buildIncidentFollowUp(answer)}${getStepPrompt('goal')}`)
+        appendAiMessage(`${buildIncidentFollowUp(answer)}${getStepPrompt('goal', currentPreviewChild?.name, answer)}`)
         return
 
       case 'goal':
@@ -164,7 +164,7 @@ const CreateStoryPage = () => {
           educationalGoal: answer,
         }))
         setCurrentStep('style')
-        appendAiMessage(`${buildGoalFollowUp(answer)}${getStepPrompt('style')}`)
+        appendAiMessage(`${buildGoalFollowUp(answer)}${getStepPrompt('style', currentPreviewChild?.name, answer)}`)
         return
 
       case 'style': {
@@ -174,7 +174,9 @@ const CreateStoryPage = () => {
           style: normalizedStyle,
         }))
         setCurrentStep('artStyle')
-        appendAiMessage(`${buildStyleFollowUp(normalizedStyle)}${getStepPrompt('artStyle')}`)
+        appendAiMessage(
+          `${buildStyleFollowUp(normalizedStyle)}${getStepPrompt('artStyle', currentPreviewChild?.name, normalizedStyle)}`
+        )
         return
       }
 
@@ -214,7 +216,7 @@ const CreateStoryPage = () => {
    */
   const jumpToStep = (step: InterviewStep) => {
     setCurrentStep(step)
-    appendAiMessage(getStepPrompt(step, currentPreviewChild?.name))
+    appendAiMessage(getStepPrompt(step, currentPreviewChild?.name, currentPreviewChild?.name ?? step))
   }
 
   /**

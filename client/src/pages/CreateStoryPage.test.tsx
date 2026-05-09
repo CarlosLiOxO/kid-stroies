@@ -88,32 +88,28 @@ describe('CreateStoryPage', () => {
 
     renderPage()
 
-    await screen.findByText('今晚想先陪陪 小米。和我说说，今天有什么小事想织进故事里吧？')
+    await screen.findByText(/今晚.*小米.*慢慢聊成故事/)
 
     await user.type(screen.getByLabelText('采访输入框'), '今天不想刷牙')
     await user.click(screen.getByRole('button', { name: '发送回答' }))
 
-    await screen.findByText('我记下啦，原来今晚想聊的是今天不想刷牙。这次你最想借故事轻轻陪 TA 练习什么，或者缓解哪种小情绪呢？')
+    await screen.findByText(/今天不想刷牙.*练习什么|今天不想刷牙.*学会什么/)
 
     await user.type(screen.getByLabelText('采访输入框'), '建立刷牙习惯')
     await user.click(screen.getByRole('button', { name: '发送回答' }))
 
-    await screen.findByText('明白了，这次故事想悄悄帮 TA 练习建立刷牙习惯。想让我把今晚的故事写得更像轻轻哄睡，还是带一点小冒险的勇气呢？')
+    await screen.findByText(/建立刷牙习惯.*哄睡|建立刷牙习惯.*小冒险|建立刷牙习惯.*柔软安静/)
 
     await user.click(screen.getByRole('button', { name: '睡前' }))
     await user.click(screen.getByRole('button', { name: '发送回答' }))
 
-    await screen.findByText('好呀，那我会把语气写得更偏“睡前”一点。如果把这个故事摊开成绘本，你更想看到柔柔的水彩，还是更可爱一点的画面呢？')
+    await screen.findByText(/睡前.*水彩|睡前.*卡通/)
 
     await user.click(screen.getByRole('button', { name: '水彩' }))
     await user.click(screen.getByRole('button', { name: '发送回答' }))
 
     await screen.findByText('我已经把这次采访整理好啦，看看这份故事设定对不对。')
-    expect(
-      screen.getByText(
-        '我来确认一下：今晚是写给小米的，主题围绕今天不想刷牙，我会用更偏睡前的口吻，把它写成一篇帮助建立刷牙习惯的水彩绘本。'
-      )
-    ).toBeInTheDocument()
+    expect(screen.getByText(/小米.*今天不想刷牙.*建立刷牙习惯.*水彩绘本/)).toBeInTheDocument()
     expect(screen.getAllByText('今天不想刷牙')).toHaveLength(2)
     expect(screen.getAllByText('建立刷牙习惯')).toHaveLength(2)
 
